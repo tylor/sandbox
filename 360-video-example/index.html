@@ -134,6 +134,38 @@
         <button id="muteBtn">Unmute</button>
     </div>
 
+    <script>
+        // Early debugging - runs before React loads
+        console.log('=== EARLY DEBUG - Script started ===');
+        const debugEl = document.getElementById('debugInfo');
+
+        // Test if basic JS works
+        if (debugEl) {
+            debugEl.textContent = 'JS Running...';
+            debugEl.style.background = 'rgba(128, 0, 128, 0.7)'; // Purple
+            console.log('✓ debugEl found and updated');
+        } else {
+            console.error('✗ debugEl not found!');
+        }
+
+        // Global error handler
+        window.addEventListener('error', (e) => {
+            console.error('GLOBAL ERROR:', e.message, e.filename, e.lineno, e.colno);
+            if (debugEl) {
+                debugEl.textContent = `JS Error: ${e.message}`;
+                debugEl.style.background = 'rgba(255, 0, 0, 0.9)';
+            }
+        });
+
+        // Check import map support
+        console.log('Import maps supported:', 'importMap' in HTMLScriptElement.prototype || document.querySelector('script[type="importmap"]'));
+
+        // Check if we're on Safari
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        console.log('Is Safari:', isSafari);
+        console.log('User Agent:', navigator.userAgent);
+    </script>
+
     <script type="importmap">
     {
         "imports": {
@@ -473,8 +505,36 @@
         }
 
         // Mount the app
-        const root = createRoot(document.getElementById('root'));
-        root.render(React.createElement(App));
+        console.log('=== Attempting to mount React app ===');
+        const rootEl = document.getElementById('root');
+        console.log('Root element:', rootEl);
+
+        if (debugEl) {
+            debugEl.textContent = 'Mounting React...';
+            debugEl.style.background = 'rgba(0, 128, 255, 0.7)'; // Blue
+        }
+
+        try {
+            const root = createRoot(rootEl);
+            console.log('✓ createRoot succeeded');
+
+            if (debugEl) {
+                debugEl.textContent = 'Rendering app...';
+            }
+
+            root.render(React.createElement(App));
+            console.log('✓ render() called successfully');
+
+            if (debugEl) {
+                debugEl.textContent = 'React app rendered';
+            }
+        } catch (err) {
+            console.error('✗ React mounting failed:', err);
+            if (debugEl) {
+                debugEl.textContent = `React Error: ${err.message}`;
+                debugEl.style.background = 'rgba(255, 0, 0, 0.9)';
+            }
+        }
 
         // Control buttons
         document.getElementById('playPauseBtn').addEventListener('click', () => {
