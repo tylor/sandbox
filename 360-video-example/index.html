@@ -194,10 +194,11 @@
                     const texture = new THREE.VideoTexture(video);
                     texture.minFilter = THREE.LinearFilter;
                     texture.magFilter = THREE.LinearFilter;
+                    texture.colorSpace = THREE.SRGBColorSpace;
 
                     const material = new THREE.MeshBasicMaterial({
                         map: texture,
-                        side: THREE.BackSide,
+                        side: THREE.FrontSide, // Use FrontSide because geometry is already inverted
                         toneMapped: false
                     });
 
