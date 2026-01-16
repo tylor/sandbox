@@ -95,6 +95,21 @@
             margin: 0 0 5px 0;
             font-size: 16px;
         }
+
+        .debug-info {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            background: rgba(255, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            max-width: 300px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -111,6 +126,8 @@
         <h3 id="sceneName">Scene 1</h3>
         <p id="sceneDesc">Default scene</p>
     </div>
+
+    <div class="debug-info" id="debugInfo">Loading...</div>
 
     <div class="controls">
         <button id="playPauseBtn">Play</button>
@@ -151,7 +168,7 @@
                 id: 2,
                 name: 'Mountain View',
                 description: 'Scenic mountain panorama',
-                src: './videos/mountain-360.mp4',
+                src: './videos/mountain-360.webm',
                 portalPosition: [-50, 0, -100],
                 portalColor: '#81c784'
             },
@@ -228,9 +245,41 @@
             const [texture] = useState(() => new THREE.VideoTexture(video));
 
             useEffect(() => {
+                console.log('Loading video:', src);
+                const debugEl = document.getElementById('debugInfo');
+                if (debugEl) debugEl.textContent = 'Loading video...';
+
+                // Add event listeners for debugging
+                const onLoadedData = () => {
+                    console.log('Video loaded:', src, video.videoWidth + 'x' + video.videoHeight);
+                    if (debugEl) debugEl.textContent = `Video loaded: ${video.videoWidth}x${video.videoHeight}`;
+                };
+                const onError = (e) => {
+                    console.error('Video error:', src, e, video.error);
+                    if (debugEl) debugEl.textContent = `ERROR: ${video.error?.message || 'Failed to load video'}`;
+                };
+                const onCanPlay = () => {
+                    console.log('Video can play:', src);
+                    if (debugEl) debugEl.textContent = 'Video ready to play';
+                };
+                const onPlaying = () => {
+                    console.log('Video playing:', src);
+                    if (debugEl) {
+                        debugEl.textContent = '✓ Video playing';
+                        debugEl.style.background = 'rgba(0, 255, 0, 0.7)';
+                    }
+                };
+
+                video.addEventListener('loadeddata', onLoadedData);
+                video.addEventListener('error', onError);
+                video.addEventListener('canplay', onCanPlay);
+                video.addEventListener('playing', onPlaying);
+
                 // Update video source when currentVideo changes
                 if (video.src !== src) {
-                    video.src = src;
+                    const fullSrc = new URL(src, window.location.href).href;
+                    console.log('Setting video src to:', fullSrc);
+                    video.src = fullSrc;
                     video.load();
                     video.play().catch(err => {
                         console.warn('Video autoplay failed. Click Play button.', err);
@@ -246,6 +295,10 @@
                 texture.format = THREE.RGBFormat;
 
                 return () => {
+                    video.removeEventListener('loadeddata', onLoadedData);
+                    video.removeEventListener('error', onError);
+                    video.removeEventListener('canplay', onCanPlay);
+                    video.removeEventListener('playing', onPlaying);
                     texture.dispose();
                 };
             }, [src, video, texture]);
