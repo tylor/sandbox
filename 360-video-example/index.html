@@ -144,6 +144,18 @@
                 const sceneRef = useRef();
 
                 useEffect(() => {
+                    console.log('=== useEffect running ===');
+                    console.log('canvasRef.current:', canvasRef.current);
+
+                    if (!canvasRef.current) {
+                        console.error('Canvas ref is null! Cannot initialize Three.js');
+                        if (debugEl) {
+                            debugEl.textContent = 'ERROR: Canvas not found';
+                            debugEl.style.background = 'rgba(255, 0, 0, 0.9)';
+                        }
+                        return;
+                    }
+
                     const video = document.createElement('video');
                     video.src = './videos/beach-360.mp4';
                     video.crossOrigin = 'anonymous';
@@ -316,7 +328,18 @@
                     };
                 }, []);
 
-                return h('canvas', { ref: canvasRef, style: { display: 'block', width: '100%', height: '100%' } });
+                return h('canvas', {
+                    ref: canvasRef,
+                    style: {
+                        display: 'block',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100vw',
+                        height: '100vh',
+                        border: '5px solid red' // Make it very obvious
+                    }
+                });
             }
 
             // Mount app
