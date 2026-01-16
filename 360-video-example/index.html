@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>360 Video Example - React Three Fiber</title>
+    <title>360 Video Example - React Three Fiber (Legacy Safari)</title>
     <style>
         * {
             margin: 0;
@@ -51,10 +51,6 @@
             background: #e0e0e0;
         }
 
-        .controls button:active {
-            transform: scale(0.98);
-        }
-
         .info {
             position: absolute;
             top: 20px;
@@ -76,24 +72,6 @@
         .info p {
             margin: 5px 0;
             line-height: 1.4;
-        }
-
-        .scene-info {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 10;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 14px;
-            max-width: 250px;
-        }
-
-        .scene-info h3 {
-            margin: 0 0 5px 0;
-            font-size: 16px;
         }
 
         .debug-info {
@@ -118,423 +96,213 @@
     <div class="info">
         <h2>360 Video Viewer</h2>
         <p>Drag to look around</p>
-        <p>Scroll to zoom</p>
-        <p><strong>Click portals to switch scenes</strong></p>
+        <p><strong>Works on iOS 15+</strong></p>
     </div>
 
-    <div class="scene-info">
-        <h3 id="sceneName">Scene 1</h3>
-        <p id="sceneDesc">Default scene</p>
-    </div>
-
-    <div class="debug-info" id="debugInfo">Loading...</div>
+    <div class="debug-info" id="debugInfo">Loading libraries...</div>
 
     <div class="controls">
         <button id="playPauseBtn">Play</button>
         <button id="muteBtn">Unmute</button>
     </div>
 
+    <!-- Load libraries from CDN (UMD builds, no import maps needed) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/three@0.170.0/build/three.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@react-three/fiber@8/dist/react-three-fiber.umd.cjs" crossorigin></script>
+
     <script>
-        // Early debugging - runs before React loads
-        console.log('=== EARLY DEBUG - Script started ===');
         const debugEl = document.getElementById('debugInfo');
+        console.log('=== Starting 360 Video App (Legacy Mode) ===');
 
-        // Test if basic JS works
-        if (debugEl) {
-            debugEl.textContent = 'JS Running...';
-            debugEl.style.background = 'rgba(128, 0, 128, 0.7)'; // Purple
-            console.log('✓ debugEl found and updated');
-        } else {
-            console.error('✗ debugEl not found!');
-        }
+        // Check if libraries loaded
+        window.addEventListener('load', () => {
+            console.log('React:', typeof React);
+            console.log('ReactDOM:', typeof ReactDOM);
+            console.log('THREE:', typeof THREE);
 
-        // Global error handler
-        window.addEventListener('error', (e) => {
-            console.error('GLOBAL ERROR:', e.message, e.filename, e.lineno, e.colno);
+            if (typeof React === 'undefined') {
+                debugEl.textContent = 'Failed to load React';
+                debugEl.style.background = 'rgba(255, 0, 0, 0.9)';
+                return;
+            }
+
             if (debugEl) {
-                debugEl.textContent = `JS Error: ${e.message}`;
+                debugEl.textContent = 'Libraries loaded, creating app...';
+                debugEl.style.background = 'rgba(128, 0, 128, 0.7)';
+            }
+
+            const { useState, useEffect, useRef, createElement: h } = React;
+            const { createRoot } = ReactDOM;
+
+            // Simple 360 video player without R3F (R3F UMD is tricky)
+            function Video360Player() {
+                const [videoStatus, setVideoStatus] = useState('Initializing...');
+                const canvasRef = useRef();
+                const videoRef = useRef();
+                const sceneRef = useRef();
+
+                useEffect(() => {
+                    const video = document.createElement('video');
+                    video.src = './videos/beach-360.mp4';
+                    video.crossOrigin = 'anonymous';
+                    video.loop = true;
+                    video.muted = true;
+                    video.playsInline = true;
+                    videoRef.current = video;
+                    window.videoElement = video;
+
+                    video.addEventListener('loadeddata', () => {
+                        setVideoStatus(`Video loaded: ${video.videoWidth}x${video.videoHeight}`);
+                        if (debugEl) {
+                            debugEl.textContent = `✓ Video loaded: ${video.videoWidth}x${video.videoHeight}`;
+                            debugEl.style.background = 'rgba(0, 128, 255, 0.7)';
+                        }
+                    });
+
+                    video.addEventListener('playing', () => {
+                        setVideoStatus('✓ Video playing!');
+                        if (debugEl) {
+                            debugEl.textContent = '✓ Video is playing!';
+                            debugEl.style.background = 'rgba(0, 255, 0, 0.7)';
+                        }
+                    });
+
+                    video.addEventListener('error', (e) => {
+                        const msg = `Error: ${video.error?.message || 'Failed to load'}`;
+                        setVideoStatus(msg);
+                        if (debugEl) {
+                            debugEl.textContent = msg;
+                            debugEl.style.background = 'rgba(255, 0, 0, 0.9)';
+                        }
+                    });
+
+                    // Setup Three.js scene
+                    const canvas = canvasRef.current;
+                    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+
+                    const scene = new THREE.Scene();
+                    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                    camera.position.set(0, 0, 0.1);
+
+                    // Create 360 video sphere
+                    const geometry = new THREE.SphereGeometry(500, 64, 32);
+                    geometry.scale(-1, 1, 1); // Invert to see from inside
+
+                    const texture = new THREE.VideoTexture(video);
+                    texture.minFilter = THREE.LinearFilter;
+                    texture.magFilter = THREE.LinearFilter;
+
+                    const material = new THREE.MeshBasicMaterial({
+                        map: texture,
+                        side: THREE.BackSide,
+                        toneMapped: false
+                    });
+
+                    const mesh = new THREE.Mesh(geometry, material);
+                    scene.add(mesh);
+
+                    sceneRef.current = { scene, camera, renderer, mesh };
+
+                    // Simple orbit controls (mouse drag)
+                    let isDragging = false;
+                    let previousMousePosition = { x: 0, y: 0 };
+                    const rotationSpeed = 0.005;
+
+                    canvas.addEventListener('mousedown', (e) => {
+                        isDragging = true;
+                        previousMousePosition = { x: e.clientX, y: e.clientY };
+                    });
+
+                    canvas.addEventListener('mousemove', (e) => {
+                        if (isDragging) {
+                            const deltaX = e.clientX - previousMousePosition.x;
+                            const deltaY = e.clientY - previousMousePosition.y;
+
+                            camera.rotation.y += deltaX * rotationSpeed;
+                            camera.rotation.x += deltaY * rotationSpeed;
+                            camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
+
+                            previousMousePosition = { x: e.clientX, y: e.clientY };
+                        }
+                    });
+
+                    canvas.addEventListener('mouseup', () => isDragging = false);
+                    canvas.addEventListener('mouseleave', () => isDragging = false);
+
+                    // Touch support
+                    canvas.addEventListener('touchstart', (e) => {
+                        if (e.touches.length === 1) {
+                            isDragging = true;
+                            previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                        }
+                    });
+
+                    canvas.addEventListener('touchmove', (e) => {
+                        if (isDragging && e.touches.length === 1) {
+                            const deltaX = e.touches[0].clientX - previousMousePosition.x;
+                            const deltaY = e.touches[0].clientY - previousMousePosition.y;
+
+                            camera.rotation.y += deltaX * rotationSpeed;
+                            camera.rotation.x += deltaY * rotationSpeed;
+                            camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
+
+                            previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                        }
+                    });
+
+                    canvas.addEventListener('touchend', () => isDragging = false);
+
+                    // Render loop
+                    function animate() {
+                        requestAnimationFrame(animate);
+                        renderer.render(scene, camera);
+                    }
+                    animate();
+
+                    // Handle resize
+                    const handleResize = () => {
+                        camera.aspect = window.innerWidth / window.innerHeight;
+                        camera.updateProjectionMatrix();
+                        renderer.setSize(window.innerWidth, window.innerHeight);
+                    };
+                    window.addEventListener('resize', handleResize);
+
+                    // Load and play video
+                    video.load();
+                    video.play().catch(err => {
+                        console.warn('Autoplay failed:', err);
+                        if (debugEl) {
+                            debugEl.textContent = 'Tap PLAY to start';
+                            debugEl.style.background = 'rgba(255, 165, 0, 0.7)';
+                        }
+                    });
+
+                    return () => {
+                        window.removeEventListener('resize', handleResize);
+                        renderer.dispose();
+                        geometry.dispose();
+                        material.dispose();
+                        texture.dispose();
+                    };
+                }, []);
+
+                return h('canvas', { ref: canvasRef, style: { display: 'block', width: '100%', height: '100%' } });
+            }
+
+            // Mount app
+            try {
+                const root = createRoot(document.getElementById('root'));
+                root.render(h(Video360Player));
+                console.log('✓ App mounted successfully');
+            } catch (err) {
+                console.error('Failed to mount:', err);
+                debugEl.textContent = `Mount error: ${err.message}`;
                 debugEl.style.background = 'rgba(255, 0, 0, 0.9)';
             }
         });
-
-        // Check import map support
-        console.log('Import maps supported:', 'importMap' in HTMLScriptElement.prototype || document.querySelector('script[type="importmap"]'));
-
-        // Check if we're on Safari
-        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-        console.log('Is Safari:', isSafari);
-        console.log('User Agent:', navigator.userAgent);
-    </script>
-
-    <script type="importmap">
-    {
-        "imports": {
-            "react": "https://esm.sh/react@18.3.1",
-            "react-dom": "https://esm.sh/react-dom@18.3.1",
-            "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
-            "three": "https://esm.sh/three@0.170.0",
-            "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.17.10",
-            "@react-three/drei": "https://esm.sh/@react-three/drei@9.117.3"
-        }
-    }
-    </script>
-
-    <script type="module">
-        import React, { useRef, useEffect, useState, Suspense } from 'react';
-        import { createRoot } from 'react-dom/client';
-        import { Canvas, useFrame } from '@react-three/fiber';
-        import { OrbitControls, Html } from '@react-three/drei';
-        import * as THREE from 'three';
-
-        // Video scenes configuration
-        const VIDEO_SCENES = [
-            {
-                id: 1,
-                name: 'Scene 1',
-                description: 'Orion360 test video (1920x960)',
-                src: './videos/beach-360.mp4',
-                portalPosition: [50, 0, -100],
-                portalColor: '#4fc3f7'
-            },
-            {
-                id: 2,
-                name: 'Scene 2',
-                description: 'Orion360 test video (1280x640)',
-                src: './videos/mountain-360.mp4',
-                portalPosition: [-50, 0, -100],
-                portalColor: '#81c784'
-            },
-            {
-                id: 3,
-                name: 'Scene 3',
-                description: 'Orion360 test video (1280x640)',
-                src: './videos/city-360.mp4',
-                portalPosition: [0, 50, -100],
-                portalColor: '#ffb74d'
-            }
-        ];
-
-        // Portal Sphere Component - clickable sphere to switch scenes
-        function PortalSphere({ position, color, sceneId, onClick, label }) {
-            const meshRef = useRef();
-            const [hovered, setHovered] = useState(false);
-
-            // Animate the portal sphere
-            useFrame((state) => {
-                if (meshRef.current) {
-                    meshRef.current.rotation.y += 0.01;
-                    meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 2;
-                }
-            });
-
-            return (
-                <mesh
-                    ref={meshRef}
-                    position={position}
-                    onClick={() => onClick(sceneId)}
-                    onPointerEnter={() => setHovered(true)}
-                    onPointerLeave={() => setHovered(false)}
-                >
-                    <sphereGeometry args={[5, 32, 32]} />
-                    <meshStandardMaterial
-                        color={color}
-                        emissive={color}
-                        emissiveIntensity={hovered ? 1.5 : 0.5}
-                        transparent
-                        opacity={0.8}
-                    />
-                    {hovered && (
-                        <Html center>
-                            <div style={{
-                                background: 'rgba(0,0,0,0.8)',
-                                color: 'white',
-                                padding: '8px 12px',
-                                borderRadius: '5px',
-                                fontSize: '12px',
-                                whiteSpace: 'nowrap',
-                                pointerEvents: 'none'
-                            }}>
-                                {label}
-                            </div>
-                        </Html>
-                    )}
-                </mesh>
-            );
-        }
-
-        // Video360 Component
-        function Video360({ src, radius = 500, currentVideo }) {
-            const videoRef = useRef();
-            const [video] = useState(() => {
-                const vid = document.createElement('video');
-                vid.crossOrigin = 'anonymous';
-                vid.loop = true;
-                vid.muted = true;
-                vid.playsInline = true;
-                return vid;
-            });
-
-            const [texture] = useState(() => new THREE.VideoTexture(video));
-
-            useEffect(() => {
-                const debugEl = document.getElementById('debugInfo');
-                console.log('=== Video360 useEffect ===');
-                console.log('src:', src);
-                console.log('video.src:', video.src);
-                console.log('video element exists:', !!video);
-
-                if (debugEl) {
-                    debugEl.textContent = 'Initializing...';
-                    debugEl.style.background = 'rgba(255, 165, 0, 0.7)';
-                }
-
-                // Add ALL video event listeners for comprehensive debugging
-                const onLoadStart = () => {
-                    console.log('📹 loadstart');
-                    if (debugEl) debugEl.textContent = 'Video loading started...';
-                };
-                const onProgress = () => {
-                    console.log('📹 progress');
-                    if (debugEl) debugEl.textContent = 'Downloading video...';
-                };
-                const onLoadedMetadata = () => {
-                    console.log('📹 loadedmetadata', video.videoWidth, 'x', video.videoHeight);
-                    if (debugEl) debugEl.textContent = `Metadata loaded (${video.videoWidth}x${video.videoHeight})`;
-                };
-                const onLoadedData = () => {
-                    console.log('📹 loadeddata');
-                    if (debugEl) debugEl.textContent = `Video data loaded (${video.videoWidth}x${video.videoHeight})`;
-                };
-                const onCanPlay = () => {
-                    console.log('📹 canplay');
-                    if (debugEl) debugEl.textContent = 'Video ready to play!';
-                };
-                const onCanPlayThrough = () => {
-                    console.log('📹 canplaythrough');
-                };
-                const onPlaying = () => {
-                    console.log('📹 playing ✓');
-                    if (debugEl) {
-                        debugEl.textContent = '✓ Video is playing!';
-                        debugEl.style.background = 'rgba(0, 255, 0, 0.7)';
-                    }
-                };
-                const onPause = () => {
-                    console.log('📹 pause');
-                    if (debugEl) {
-                        debugEl.textContent = 'Video paused';
-                        debugEl.style.background = 'rgba(255, 165, 0, 0.7)';
-                    }
-                };
-                const onWaiting = () => {
-                    console.log('📹 waiting (buffering)');
-                    if (debugEl) debugEl.textContent = 'Video buffering...';
-                };
-                const onStalled = () => {
-                    console.log('📹 stalled');
-                    if (debugEl) debugEl.textContent = 'Video stalled (network issue?)';
-                };
-                const onSuspend = () => {
-                    console.log('📹 suspend');
-                };
-                const onError = (e) => {
-                    console.error('📹 ERROR:', e);
-                    console.error('Video error object:', video.error);
-                    if (video.error) {
-                        console.error('Error code:', video.error.code);
-                        console.error('Error message:', video.error.message);
-                    }
-                    if (debugEl) {
-                        const errorMsg = video.error ?
-                            `ERROR ${video.error.code}: ${video.error.message}` :
-                            'Video failed to load';
-                        debugEl.textContent = errorMsg;
-                        debugEl.style.background = 'rgba(255, 0, 0, 0.9)';
-                    }
-                };
-
-                // Add all event listeners
-                video.addEventListener('loadstart', onLoadStart);
-                video.addEventListener('progress', onProgress);
-                video.addEventListener('loadedmetadata', onLoadedMetadata);
-                video.addEventListener('loadeddata', onLoadedData);
-                video.addEventListener('canplay', onCanPlay);
-                video.addEventListener('canplaythrough', onCanPlayThrough);
-                video.addEventListener('playing', onPlaying);
-                video.addEventListener('pause', onPause);
-                video.addEventListener('waiting', onWaiting);
-                video.addEventListener('stalled', onStalled);
-                video.addEventListener('suspend', onSuspend);
-                video.addEventListener('error', onError);
-
-                // Always set the video source
-                const fullSrc = new URL(src, window.location.href).href;
-                console.log('Setting video.src to:', fullSrc);
-                video.src = fullSrc;
-
-                console.log('Calling video.load()...');
-                video.load();
-
-                console.log('Attempting video.play()...');
-                const playPromise = video.play();
-
-                if (playPromise !== undefined) {
-                    playPromise
-                        .then(() => {
-                            console.log('✓ Play promise resolved - video playing');
-                        })
-                        .catch(err => {
-                            console.warn('⚠️ Play promise rejected:', err.name, err.message);
-                            if (debugEl) {
-                                debugEl.textContent = `Tap PLAY button to start (${err.name})`;
-                                debugEl.style.background = 'rgba(255, 165, 0, 0.7)';
-                            }
-                        });
-                }
-
-                // Store video element globally for controls
-                window.videoElement = video;
-
-                // Configure texture for better quality
-                texture.minFilter = THREE.LinearFilter;
-                texture.magFilter = THREE.LinearFilter;
-                texture.format = THREE.RGBFormat;
-                texture.needsUpdate = true;
-
-                // Timeout to detect stuck loading
-                const timeout = setTimeout(() => {
-                    if (video.readyState < 2) {
-                        console.warn('⏱️ Video loading timeout - readyState:', video.readyState);
-                        if (debugEl) {
-                            debugEl.textContent = `Stuck loading (readyState: ${video.readyState}) - Check network?`;
-                        }
-                    }
-                }, 10000);
-
-                return () => {
-                    clearTimeout(timeout);
-                    video.removeEventListener('loadstart', onLoadStart);
-                    video.removeEventListener('progress', onProgress);
-                    video.removeEventListener('loadedmetadata', onLoadedMetadata);
-                    video.removeEventListener('loadeddata', onLoadedData);
-                    video.removeEventListener('canplay', onCanPlay);
-                    video.removeEventListener('canplaythrough', onCanPlayThrough);
-                    video.removeEventListener('playing', onPlaying);
-                    video.removeEventListener('pause', onPause);
-                    video.removeEventListener('waiting', onWaiting);
-                    video.removeEventListener('stalled', onStalled);
-                    video.removeEventListener('suspend', onSuspend);
-                    video.removeEventListener('error', onError);
-                    texture.dispose();
-                };
-            }, [src, video, texture]);
-
-            // Inverted sphere: scale x by -1 to flip the sphere inside out
-            // This makes the texture visible from inside
-            return (
-                <mesh scale={[-1, 1, 1]}>
-                    <sphereGeometry args={[radius, 64, 32]} />
-                    <meshBasicMaterial
-                        map={texture}
-                        side={THREE.BackSide}
-                        toneMapped={false}
-                    />
-                </mesh>
-            );
-        }
-
-        // Main App Component
-        function App() {
-            const [currentScene, setCurrentScene] = useState(0);
-
-            const handlePortalClick = (sceneId) => {
-                const sceneIndex = VIDEO_SCENES.findIndex(s => s.id === sceneId);
-                if (sceneIndex !== -1) {
-                    setCurrentScene(sceneIndex);
-                    // Update scene info
-                    document.getElementById('sceneName').textContent = VIDEO_SCENES[sceneIndex].name;
-                    document.getElementById('sceneDesc').textContent = VIDEO_SCENES[sceneIndex].description;
-                }
-            };
-
-            // Initialize scene info
-            useEffect(() => {
-                document.getElementById('sceneName').textContent = VIDEO_SCENES[0].name;
-                document.getElementById('sceneDesc').textContent = VIDEO_SCENES[0].description;
-            }, []);
-
-            return (
-                <Canvas camera={{ position: [0, 0, 0.1], fov: 75 }}>
-                    <Suspense fallback={null}>
-                        {/* Main 360 video environment */}
-                        <Video360
-                            src={VIDEO_SCENES[currentScene].src}
-                            currentVideo={currentScene}
-                        />
-
-                        {/* Portal spheres for other scenes */}
-                        {VIDEO_SCENES.map((scene, index) => {
-                            if (index !== currentScene) {
-                                return (
-                                    <PortalSphere
-                                        key={scene.id}
-                                        position={scene.portalPosition}
-                                        color={scene.portalColor}
-                                        sceneId={scene.id}
-                                        onClick={handlePortalClick}
-                                        label={scene.name}
-                                    />
-                                );
-                            }
-                            return null;
-                        })}
-
-                        {/* Ambient light for portal spheres */}
-                        <ambientLight intensity={0.5} />
-                        <pointLight position={[0, 0, 0]} intensity={1} />
-
-                        {/* OrbitControls for looking around */}
-                        <OrbitControls
-                            enableZoom={true}
-                            enablePan={false}
-                            rotateSpeed={-0.5}
-                        />
-                    </Suspense>
-                </Canvas>
-            );
-        }
-
-        // Mount the app
-        console.log('=== Attempting to mount React app ===');
-        const rootEl = document.getElementById('root');
-        console.log('Root element:', rootEl);
-
-        if (debugEl) {
-            debugEl.textContent = 'Mounting React...';
-            debugEl.style.background = 'rgba(0, 128, 255, 0.7)'; // Blue
-        }
-
-        try {
-            const root = createRoot(rootEl);
-            console.log('✓ createRoot succeeded');
-
-            if (debugEl) {
-                debugEl.textContent = 'Rendering app...';
-            }
-
-            root.render(React.createElement(App));
-            console.log('✓ render() called successfully');
-
-            if (debugEl) {
-                debugEl.textContent = 'React app rendered';
-            }
-        } catch (err) {
-            console.error('✗ React mounting failed:', err);
-            if (debugEl) {
-                debugEl.textContent = `React Error: ${err.message}`;
-                debugEl.style.background = 'rgba(255, 0, 0, 0.9)';
-            }
-        }
 
         // Control buttons
         document.getElementById('playPauseBtn').addEventListener('click', () => {
