@@ -255,9 +255,15 @@
 
                     canvas.addEventListener('touchend', () => isDragging = false);
 
-                    // Render loop
+                    // Render loop - update texture every frame
                     function animate() {
                         requestAnimationFrame(animate);
+
+                        // Update video texture
+                        if (video.readyState >= video.HAVE_CURRENT_DATA) {
+                            texture.needsUpdate = true;
+                        }
+
                         renderer.render(scene, camera);
                     }
                     animate();
