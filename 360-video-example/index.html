@@ -245,45 +245,119 @@
             const [texture] = useState(() => new THREE.VideoTexture(video));
 
             useEffect(() => {
-                console.log('Loading video:', src);
                 const debugEl = document.getElementById('debugInfo');
-                if (debugEl) debugEl.textContent = 'Loading video...';
+                console.log('=== Video360 useEffect ===');
+                console.log('src:', src);
+                console.log('video.src:', video.src);
+                console.log('video element exists:', !!video);
 
-                // Add event listeners for debugging
-                const onLoadedData = () => {
-                    console.log('Video loaded:', src, video.videoWidth + 'x' + video.videoHeight);
-                    if (debugEl) debugEl.textContent = `Video loaded: ${video.videoWidth}x${video.videoHeight}`;
+                if (debugEl) {
+                    debugEl.textContent = 'Initializing...';
+                    debugEl.style.background = 'rgba(255, 165, 0, 0.7)';
+                }
+
+                // Add ALL video event listeners for comprehensive debugging
+                const onLoadStart = () => {
+                    console.log('📹 loadstart');
+                    if (debugEl) debugEl.textContent = 'Video loading started...';
                 };
-                const onError = (e) => {
-                    console.error('Video error:', src, e, video.error);
-                    if (debugEl) debugEl.textContent = `ERROR: ${video.error?.message || 'Failed to load video'}`;
+                const onProgress = () => {
+                    console.log('📹 progress');
+                    if (debugEl) debugEl.textContent = 'Downloading video...';
+                };
+                const onLoadedMetadata = () => {
+                    console.log('📹 loadedmetadata', video.videoWidth, 'x', video.videoHeight);
+                    if (debugEl) debugEl.textContent = `Metadata loaded (${video.videoWidth}x${video.videoHeight})`;
+                };
+                const onLoadedData = () => {
+                    console.log('📹 loadeddata');
+                    if (debugEl) debugEl.textContent = `Video data loaded (${video.videoWidth}x${video.videoHeight})`;
                 };
                 const onCanPlay = () => {
-                    console.log('Video can play:', src);
-                    if (debugEl) debugEl.textContent = 'Video ready to play';
+                    console.log('📹 canplay');
+                    if (debugEl) debugEl.textContent = 'Video ready to play!';
+                };
+                const onCanPlayThrough = () => {
+                    console.log('📹 canplaythrough');
                 };
                 const onPlaying = () => {
-                    console.log('Video playing:', src);
+                    console.log('📹 playing ✓');
                     if (debugEl) {
-                        debugEl.textContent = '✓ Video playing';
+                        debugEl.textContent = '✓ Video is playing!';
                         debugEl.style.background = 'rgba(0, 255, 0, 0.7)';
                     }
                 };
+                const onPause = () => {
+                    console.log('📹 pause');
+                    if (debugEl) {
+                        debugEl.textContent = 'Video paused';
+                        debugEl.style.background = 'rgba(255, 165, 0, 0.7)';
+                    }
+                };
+                const onWaiting = () => {
+                    console.log('📹 waiting (buffering)');
+                    if (debugEl) debugEl.textContent = 'Video buffering...';
+                };
+                const onStalled = () => {
+                    console.log('📹 stalled');
+                    if (debugEl) debugEl.textContent = 'Video stalled (network issue?)';
+                };
+                const onSuspend = () => {
+                    console.log('📹 suspend');
+                };
+                const onError = (e) => {
+                    console.error('📹 ERROR:', e);
+                    console.error('Video error object:', video.error);
+                    if (video.error) {
+                        console.error('Error code:', video.error.code);
+                        console.error('Error message:', video.error.message);
+                    }
+                    if (debugEl) {
+                        const errorMsg = video.error ?
+                            `ERROR ${video.error.code}: ${video.error.message}` :
+                            'Video failed to load';
+                        debugEl.textContent = errorMsg;
+                        debugEl.style.background = 'rgba(255, 0, 0, 0.9)';
+                    }
+                };
 
+                // Add all event listeners
+                video.addEventListener('loadstart', onLoadStart);
+                video.addEventListener('progress', onProgress);
+                video.addEventListener('loadedmetadata', onLoadedMetadata);
                 video.addEventListener('loadeddata', onLoadedData);
-                video.addEventListener('error', onError);
                 video.addEventListener('canplay', onCanPlay);
+                video.addEventListener('canplaythrough', onCanPlayThrough);
                 video.addEventListener('playing', onPlaying);
+                video.addEventListener('pause', onPause);
+                video.addEventListener('waiting', onWaiting);
+                video.addEventListener('stalled', onStalled);
+                video.addEventListener('suspend', onSuspend);
+                video.addEventListener('error', onError);
 
-                // Update video source when currentVideo changes
-                if (video.src !== src) {
-                    const fullSrc = new URL(src, window.location.href).href;
-                    console.log('Setting video src to:', fullSrc);
-                    video.src = fullSrc;
-                    video.load();
-                    video.play().catch(err => {
-                        console.warn('Video autoplay failed. Click Play button.', err);
-                    });
+                // Always set the video source
+                const fullSrc = new URL(src, window.location.href).href;
+                console.log('Setting video.src to:', fullSrc);
+                video.src = fullSrc;
+
+                console.log('Calling video.load()...');
+                video.load();
+
+                console.log('Attempting video.play()...');
+                const playPromise = video.play();
+
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            console.log('✓ Play promise resolved - video playing');
+                        })
+                        .catch(err => {
+                            console.warn('⚠️ Play promise rejected:', err.name, err.message);
+                            if (debugEl) {
+                                debugEl.textContent = `Tap PLAY button to start (${err.name})`;
+                                debugEl.style.background = 'rgba(255, 165, 0, 0.7)';
+                            }
+                        });
                 }
 
                 // Store video element globally for controls
@@ -293,12 +367,32 @@
                 texture.minFilter = THREE.LinearFilter;
                 texture.magFilter = THREE.LinearFilter;
                 texture.format = THREE.RGBFormat;
+                texture.needsUpdate = true;
+
+                // Timeout to detect stuck loading
+                const timeout = setTimeout(() => {
+                    if (video.readyState < 2) {
+                        console.warn('⏱️ Video loading timeout - readyState:', video.readyState);
+                        if (debugEl) {
+                            debugEl.textContent = `Stuck loading (readyState: ${video.readyState}) - Check network?`;
+                        }
+                    }
+                }, 10000);
 
                 return () => {
+                    clearTimeout(timeout);
+                    video.removeEventListener('loadstart', onLoadStart);
+                    video.removeEventListener('progress', onProgress);
+                    video.removeEventListener('loadedmetadata', onLoadedMetadata);
                     video.removeEventListener('loadeddata', onLoadedData);
-                    video.removeEventListener('error', onError);
                     video.removeEventListener('canplay', onCanPlay);
+                    video.removeEventListener('canplaythrough', onCanPlayThrough);
                     video.removeEventListener('playing', onPlaying);
+                    video.removeEventListener('pause', onPause);
+                    video.removeEventListener('waiting', onWaiting);
+                    video.removeEventListener('stalled', onStalled);
+                    video.removeEventListener('suspend', onSuspend);
+                    video.removeEventListener('error', onError);
                     texture.dispose();
                 };
             }, [src, video, texture]);
