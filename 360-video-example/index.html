@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>360 Video Example - React Three Fiber (Legacy Safari)</title>
+    <title>360 Video Example - Interactive Portals</title>
     <style>
         * {
             margin: 0;
@@ -20,6 +20,12 @@
         #root {
             width: 100vw;
             height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
         }
 
         .controls {
@@ -51,6 +57,10 @@
             background: #e0e0e0;
         }
 
+        .controls button:active {
+            transform: scale(0.98);
+        }
+
         .info {
             position: absolute;
             top: 20px;
@@ -74,285 +84,458 @@
             line-height: 1.4;
         }
 
-        .debug-info {
+        .scene-info {
             position: absolute;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 20px;
+            right: 20px;
             z-index: 10;
-            background: rgba(255, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.7);
             color: white;
-            padding: 10px 15px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            max-width: 250px;
+        }
+
+        .scene-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+
+        .portal-label {
+            position: absolute;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
             border-radius: 5px;
             font-size: 12px;
-            max-width: 300px;
-            text-align: center;
+            white-space: nowrap;
+            pointer-events: none;
+            transform: translate(-50%, -100%);
+            margin-top: -10px;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">
+        <canvas id="canvas"></canvas>
+    </div>
 
     <div class="info">
         <h2>360 Video Viewer</h2>
         <p>Drag to look around</p>
-        <p><strong>Works on iOS 15+</strong></p>
+        <p>Scroll to zoom</p>
+        <p><strong>Click portals to switch scenes</strong></p>
     </div>
 
-    <div class="debug-info" id="debugInfo">Loading libraries...</div>
+    <div class="scene-info">
+        <h3 id="sceneName">Scene 1</h3>
+        <p id="sceneDesc">Beach</p>
+    </div>
+
+    <div class="portal-label" id="portalLabel"></div>
 
     <div class="controls">
         <button id="playPauseBtn">Play</button>
         <button id="muteBtn">Unmute</button>
     </div>
 
-    <!-- Load libraries from CDN (UMD builds, no import maps needed) -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/three@0.170.0/build/three.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@react-three/fiber@8/dist/react-three-fiber.umd.cjs" crossorigin></script>
 
     <script>
-        const debugEl = document.getElementById('debugInfo');
-        console.log('=== Starting 360 Video App (Legacy Mode) ===');
-
-        // Check if libraries loaded
-        window.addEventListener('load', () => {
-            console.log('React:', typeof React);
-            console.log('ReactDOM:', typeof ReactDOM);
-            console.log('THREE:', typeof THREE);
-
-            if (typeof React === 'undefined') {
-                debugEl.textContent = 'Failed to load React';
-                debugEl.style.background = 'rgba(255, 0, 0, 0.9)';
-                return;
+        // === Scene configuration ===
+        const VIDEO_SCENES = [
+            {
+                id: 0,
+                name: 'Scene 1',
+                description: 'Beach',
+                src: './videos/beach-360.mp4',
+                portalPosition: new THREE.Vector3(0, 0, -80),
+                portalColor: 0x4fc3f7
+            },
+            {
+                id: 1,
+                name: 'Scene 2',
+                description: 'Mountain',
+                src: './videos/mountain-360.mp4',
+                portalPosition: new THREE.Vector3(-70, 0, 40),
+                portalColor: 0x81c784
+            },
+            {
+                id: 2,
+                name: 'Scene 3',
+                description: 'City',
+                src: './videos/city-360.mp4',
+                portalPosition: new THREE.Vector3(70, 0, 40),
+                portalColor: 0xffb74d
             }
+        ];
 
-            if (debugEl) {
-                debugEl.textContent = 'Libraries loaded, creating app...';
-                debugEl.style.background = 'rgba(128, 0, 128, 0.7)';
-            }
+        let currentSceneIndex = 0;
 
-            const { useState, useEffect, useRef, createElement: h } = React;
-            const { createRoot } = ReactDOM;
+        // === Three.js setup ===
+        const canvas = document.getElementById('canvas');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-            // Simple 360 video player without R3F (R3F UMD is tricky)
-            function Video360Player() {
-                const [videoStatus, setVideoStatus] = useState('Initializing...');
-                const canvasRef = useRef();
-                const videoRef = useRef();
-                const sceneRef = useRef();
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(
+            75, window.innerWidth / window.innerHeight, 0.1, 1000
+        );
+        camera.position.set(0, 0, 0.1);
 
-                useEffect(() => {
-                    const video = document.createElement('video');
-                    video.src = './videos/beach-360.mp4';
-                    video.crossOrigin = 'anonymous';
-                    video.loop = true;
-                    video.muted = true;
-                    video.playsInline = true;
-                    videoRef.current = video;
-                    window.videoElement = video;
+        // === Video element ===
+        const video = document.createElement('video');
+        video.crossOrigin = 'anonymous';
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.src = VIDEO_SCENES[0].src;
+        window.videoElement = video;
 
-                    video.addEventListener('loadeddata', () => {
-                        setVideoStatus(`Video loaded: ${video.videoWidth}x${video.videoHeight}`);
-                        if (debugEl) {
-                            debugEl.textContent = `✓ Video loaded: ${video.videoWidth}x${video.videoHeight}`;
-                            debugEl.style.background = 'rgba(0, 128, 255, 0.7)';
-                        }
-                    });
+        // === 360 video sphere ===
+        const sphereGeometry = new THREE.SphereGeometry(500, 64, 32);
+        sphereGeometry.scale(-1, 1, 1); // Invert to view from inside
 
-                    video.addEventListener('playing', () => {
-                        setVideoStatus('✓ Video playing!');
-                        if (debugEl) {
-                            debugEl.textContent = '✓ Video is playing!';
-                            debugEl.style.background = 'rgba(0, 255, 0, 0.7)';
-                        }
-                    });
+        const videoTexture = new THREE.VideoTexture(video);
+        videoTexture.minFilter = THREE.LinearFilter;
+        videoTexture.magFilter = THREE.LinearFilter;
+        videoTexture.colorSpace = THREE.SRGBColorSpace;
 
-                    video.addEventListener('error', (e) => {
-                        const msg = `Error: ${video.error?.message || 'Failed to load'}`;
-                        setVideoStatus(msg);
-                        if (debugEl) {
-                            debugEl.textContent = msg;
-                            debugEl.style.background = 'rgba(255, 0, 0, 0.9)';
-                        }
-                    });
+        const sphereMaterial = new THREE.MeshBasicMaterial({
+            map: videoTexture,
+            side: THREE.FrontSide,
+            toneMapped: false
+        });
 
-                    // Setup Three.js scene
-                    const canvas = canvasRef.current;
-                    console.log('Canvas element:', canvas);
+        const videoSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        scene.add(videoSphere);
 
-                    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-                    renderer.setSize(window.innerWidth, window.innerHeight);
-                    console.log('Renderer created, size:', window.innerWidth, 'x', window.innerHeight);
+        // === Lighting for portal spheres ===
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const pointLight = new THREE.PointLight(0xffffff, 1, 300);
+        pointLight.position.set(0, 0, 0);
+        scene.add(pointLight);
 
-                    const scene = new THREE.Scene();
-                    scene.background = new THREE.Color(0x000033); // Dark blue to see if rendering works
+        // === Portal spheres ===
+        const portalMeshes = [];
+        const portalGlowMeshes = [];
 
-                    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                    camera.position.set(0, 0, 0.1);
-                    console.log('Scene and camera created');
+        VIDEO_SCENES.forEach((sceneConfig) => {
+            // Inner solid sphere
+            const portalGeometry = new THREE.SphereGeometry(5, 32, 32);
+            const portalMaterial = new THREE.MeshStandardMaterial({
+                color: sceneConfig.portalColor,
+                emissive: sceneConfig.portalColor,
+                emissiveIntensity: 0.5,
+                transparent: true,
+                opacity: 0.85,
+                roughness: 0.2,
+                metalness: 0.3
+            });
+            const portalMesh = new THREE.Mesh(portalGeometry, portalMaterial);
+            portalMesh.position.copy(sceneConfig.portalPosition);
+            portalMesh.userData = { sceneId: sceneConfig.id, baseY: sceneConfig.portalPosition.y };
+            scene.add(portalMesh);
+            portalMeshes.push(portalMesh);
 
-                    // Create 360 video sphere
-                    const geometry = new THREE.SphereGeometry(500, 64, 32);
-                    geometry.scale(-1, 1, 1); // Invert to see from inside
+            // Outer glow sphere
+            const glowGeometry = new THREE.SphereGeometry(7, 32, 32);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: sceneConfig.portalColor,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.BackSide
+            });
+            const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+            glowMesh.position.copy(sceneConfig.portalPosition);
+            glowMesh.userData = { baseY: sceneConfig.portalPosition.y };
+            scene.add(glowMesh);
+            portalGlowMeshes.push(glowMesh);
+        });
 
-                    const texture = new THREE.VideoTexture(video);
-                    texture.minFilter = THREE.LinearFilter;
-                    texture.magFilter = THREE.LinearFilter;
-                    texture.colorSpace = THREE.SRGBColorSpace;
+        function updatePortalVisibility() {
+            portalMeshes.forEach((mesh, i) => {
+                const visible = i !== currentSceneIndex;
+                mesh.visible = visible;
+                portalGlowMeshes[i].visible = visible;
+            });
+        }
+        updatePortalVisibility();
 
-                    const material = new THREE.MeshBasicMaterial({
-                        map: texture,
-                        side: THREE.FrontSide, // Use FrontSide because geometry is already inverted
-                        toneMapped: false
-                    });
+        // === Raycaster for portal clicks ===
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let hoveredPortal = null;
+        const portalLabel = document.getElementById('portalLabel');
 
-                    const mesh = new THREE.Mesh(geometry, material);
-                    scene.add(mesh);
+        function getVisiblePortals() {
+            return portalMeshes.filter((_, i) => i !== currentSceneIndex);
+        }
 
-                    // Add a test cube to verify rendering is working
-                    const cubeGeometry = new THREE.BoxGeometry(10, 10, 10);
-                    const cubeMaterial = new THREE.MeshBasicMaterial({
-                        color: 0xff0000,
-                        wireframe: true
-                    });
-                    const testCube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-                    testCube.position.set(0, 0, -30);
-                    scene.add(testCube);
+        function onPointerMove(event) {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-                    sceneRef.current = { scene, camera, renderer, mesh, testCube };
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(getVisiblePortals());
 
-                    // Simple orbit controls (mouse drag)
-                    let isDragging = false;
-                    let previousMousePosition = { x: 0, y: 0 };
-                    const rotationSpeed = 0.005;
-
-                    canvas.addEventListener('mousedown', (e) => {
-                        isDragging = true;
-                        previousMousePosition = { x: e.clientX, y: e.clientY };
-                    });
-
-                    canvas.addEventListener('mousemove', (e) => {
-                        if (isDragging) {
-                            const deltaX = e.clientX - previousMousePosition.x;
-                            const deltaY = e.clientY - previousMousePosition.y;
-
-                            camera.rotation.y += deltaX * rotationSpeed;
-                            camera.rotation.x += deltaY * rotationSpeed;
-                            camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
-
-                            previousMousePosition = { x: e.clientX, y: e.clientY };
-                        }
-                    });
-
-                    canvas.addEventListener('mouseup', () => isDragging = false);
-                    canvas.addEventListener('mouseleave', () => isDragging = false);
-
-                    // Touch support
-                    canvas.addEventListener('touchstart', (e) => {
-                        if (e.touches.length === 1) {
-                            isDragging = true;
-                            previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-                        }
-                    });
-
-                    canvas.addEventListener('touchmove', (e) => {
-                        if (isDragging && e.touches.length === 1) {
-                            const deltaX = e.touches[0].clientX - previousMousePosition.x;
-                            const deltaY = e.touches[0].clientY - previousMousePosition.y;
-
-                            camera.rotation.y += deltaX * rotationSpeed;
-                            camera.rotation.x += deltaY * rotationSpeed;
-                            camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
-
-                            previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-                        }
-                    });
-
-                    canvas.addEventListener('touchend', () => isDragging = false);
-
-                    // Render loop - update texture every frame
-                    function animate() {
-                        requestAnimationFrame(animate);
-
-                        // Rotate test cube
-                        testCube.rotation.x += 0.01;
-                        testCube.rotation.y += 0.01;
-
-                        // Update video texture
-                        if (video.readyState >= video.HAVE_CURRENT_DATA) {
-                            texture.needsUpdate = true;
-                        }
-
-                        renderer.render(scene, camera);
+            if (intersects.length > 0) {
+                const portal = intersects[0].object;
+                if (hoveredPortal !== portal) {
+                    // Reset previous hover
+                    if (hoveredPortal) {
+                        hoveredPortal.material.emissiveIntensity = 0.5;
                     }
-                    animate();
+                    hoveredPortal = portal;
+                    portal.material.emissiveIntensity = 1.5;
+                    canvas.style.cursor = 'pointer';
 
-                    // Handle resize
-                    const handleResize = () => {
-                        camera.aspect = window.innerWidth / window.innerHeight;
-                        camera.updateProjectionMatrix();
-                        renderer.setSize(window.innerWidth, window.innerHeight);
-                    };
-                    window.addEventListener('resize', handleResize);
+                    // Show label
+                    const sceneConfig = VIDEO_SCENES[portal.userData.sceneId];
+                    portalLabel.textContent = sceneConfig.name + ' - ' + sceneConfig.description;
+                    portalLabel.style.display = 'block';
+                }
 
-                    // Load and play video
-                    video.load();
-                    video.play().catch(err => {
-                        console.warn('Autoplay failed:', err);
-                        if (debugEl) {
-                            debugEl.textContent = 'Tap PLAY to start';
-                            debugEl.style.background = 'rgba(255, 165, 0, 0.7)';
-                        }
-                    });
-
-                    return () => {
-                        window.removeEventListener('resize', handleResize);
-                        renderer.dispose();
-                        geometry.dispose();
-                        material.dispose();
-                        texture.dispose();
-                    };
-                }, []);
-
-                return h('canvas', { ref: canvasRef, style: { display: 'block', width: '100%', height: '100%' } });
+                // Update label position
+                const portalPos = portal.position.clone();
+                portalPos.project(camera);
+                const x = (portalPos.x * 0.5 + 0.5) * window.innerWidth;
+                const y = (-portalPos.y * 0.5 + 0.5) * window.innerHeight;
+                portalLabel.style.left = x + 'px';
+                portalLabel.style.top = y + 'px';
+            } else {
+                if (hoveredPortal) {
+                    hoveredPortal.material.emissiveIntensity = 0.5;
+                    hoveredPortal = null;
+                    canvas.style.cursor = 'grab';
+                    portalLabel.style.display = 'none';
+                }
             }
+        }
 
-            // Mount app
-            try {
-                const root = createRoot(document.getElementById('root'));
-                root.render(h(Video360Player));
-                console.log('✓ App mounted successfully');
-            } catch (err) {
-                console.error('Failed to mount:', err);
-                debugEl.textContent = `Mount error: ${err.message}`;
-                debugEl.style.background = 'rgba(255, 0, 0, 0.9)';
+        function onPointerClick(event) {
+            // Don't trigger click if we were dragging
+            if (dragDistance > 5) return;
+
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(getVisiblePortals());
+
+            if (intersects.length > 0) {
+                const sceneId = intersects[0].object.userData.sceneId;
+                switchScene(sceneId);
+            }
+        }
+
+        function switchScene(sceneId) {
+            if (sceneId === currentSceneIndex) return;
+
+            currentSceneIndex = sceneId;
+            const sceneConfig = VIDEO_SCENES[sceneId];
+
+            // Update video source
+            video.src = sceneConfig.src;
+            video.load();
+            video.play().catch(() => {});
+
+            // Update portal visibility
+            updatePortalVisibility();
+
+            // Update UI
+            document.getElementById('sceneName').textContent = sceneConfig.name;
+            document.getElementById('sceneDesc').textContent = sceneConfig.description;
+
+            // Reset hover state
+            hoveredPortal = null;
+            portalLabel.style.display = 'none';
+            canvas.style.cursor = 'grab';
+        }
+
+        // === Orbit controls (mouse drag to rotate camera) ===
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let dragDistance = 0;
+        const rotationSpeed = 0.003;
+
+        // Spherical coordinates for smooth orbit
+        let phi = Math.PI / 2;   // vertical angle (0 = top, PI = bottom)
+        let theta = 0;           // horizontal angle
+
+        function updateCameraFromSpherical() {
+            const r = 0.1;
+            camera.position.set(
+                r * Math.sin(phi) * Math.sin(theta),
+                r * Math.cos(phi),
+                r * Math.sin(phi) * Math.cos(theta)
+            );
+            camera.lookAt(0, 0, 0);
+        }
+        updateCameraFromSpherical();
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            dragDistance = 0;
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+            canvas.style.cursor = 'grabbing';
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            onPointerMove(e);
+            if (isDragging) {
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+                dragDistance += Math.abs(deltaX) + Math.abs(deltaY);
+
+                theta -= deltaX * rotationSpeed;
+                phi += deltaY * rotationSpeed;
+                phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi));
+
+                updateCameraFromSpherical();
+                previousMousePosition = { x: e.clientX, y: e.clientY };
             }
         });
 
-        // Control buttons
-        document.getElementById('playPauseBtn').addEventListener('click', () => {
-            const video = window.videoElement;
-            const btn = document.getElementById('playPauseBtn');
+        canvas.addEventListener('mouseup', (e) => {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+            onPointerClick(e);
+        });
 
-            if (video && video.paused) {
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+
+        // Touch support
+        let touchStartPos = { x: 0, y: 0 };
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                dragDistance = 0;
+                previousMousePosition = {
+                    x: e.touches[0].clientX,
+                    y: e.touches[0].clientY
+                };
+                touchStartPos = {
+                    x: e.touches[0].clientX,
+                    y: e.touches[0].clientY
+                };
+            }
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (isDragging && e.touches.length === 1) {
+                const deltaX = e.touches[0].clientX - previousMousePosition.x;
+                const deltaY = e.touches[0].clientY - previousMousePosition.y;
+                dragDistance += Math.abs(deltaX) + Math.abs(deltaY);
+
+                theta -= deltaX * rotationSpeed;
+                phi += deltaY * rotationSpeed;
+                phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi));
+
+                updateCameraFromSpherical();
+                previousMousePosition = {
+                    x: e.touches[0].clientX,
+                    y: e.touches[0].clientY
+                };
+            }
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            isDragging = false;
+            // Detect tap for portal clicks
+            if (dragDistance < 10) {
+                const fakeEvent = {
+                    clientX: touchStartPos.x,
+                    clientY: touchStartPos.y
+                };
+                // Set mouse for raycaster
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = ((fakeEvent.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((fakeEvent.clientY - rect.top) / rect.height) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(getVisiblePortals());
+                if (intersects.length > 0) {
+                    const sceneId = intersects[0].object.userData.sceneId;
+                    switchScene(sceneId);
+                }
+            }
+        });
+
+        // Scroll to zoom (adjust FOV)
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            camera.fov = Math.max(30, Math.min(100, camera.fov + e.deltaY * 0.05));
+            camera.updateProjectionMatrix();
+        }, { passive: false });
+
+        // Set initial cursor
+        canvas.style.cursor = 'grab';
+
+        // === Animation loop ===
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const elapsed = clock.getElapsedTime();
+
+            // Animate portal spheres (floating + rotation)
+            portalMeshes.forEach((mesh, i) => {
+                if (mesh.visible) {
+                    mesh.rotation.y += 0.01;
+                    mesh.position.y = mesh.userData.baseY + Math.sin(elapsed * 2 + i * 2) * 2;
+                    portalGlowMeshes[i].position.y = mesh.position.y;
+                    portalGlowMeshes[i].rotation.y -= 0.005;
+                }
+            });
+
+            // Update video texture
+            if (video.readyState >= video.HAVE_CURRENT_DATA) {
+                videoTexture.needsUpdate = true;
+            }
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // === Window resize ===
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // === Start video playback ===
+        video.load();
+        video.play().catch(() => {});
+
+        // === Control buttons ===
+        document.getElementById('playPauseBtn').addEventListener('click', () => {
+            const btn = document.getElementById('playPauseBtn');
+            if (video.paused) {
                 video.play();
                 btn.textContent = 'Pause';
-            } else if (video) {
+            } else {
                 video.pause();
                 btn.textContent = 'Play';
             }
         });
 
         document.getElementById('muteBtn').addEventListener('click', () => {
-            const video = window.videoElement;
             const btn = document.getElementById('muteBtn');
-
-            if (video) {
-                video.muted = !video.muted;
-                btn.textContent = video.muted ? 'Unmute' : 'Mute';
-            }
+            video.muted = !video.muted;
+            btn.textContent = video.muted ? 'Unmute' : 'Mute';
         });
     </script>
 </body>
