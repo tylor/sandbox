@@ -1,0 +1,88 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  cursor: grab;
+  background: #000;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+  overflow: hidden;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+.overlay {
+  z-index: 10;
+  color: #fff;
+  background: #000000b3;
+  border-radius: 10px;
+  padding: 15px;
+  font-size: 14px;
+  position: absolute;
+}
+
+.info {
+  max-width: 300px;
+  top: 20px;
+  left: 20px;
+}
+
+.info h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+.info p {
+  margin: 5px 0;
+  line-height: 1.4;
+}
+
+.scene-info {
+  max-width: 250px;
+  top: 20px;
+  right: 20px;
+}
+
+.scene-info h3 {
+  margin: 0 0 5px;
+  font-size: 16px;
+}
+
+.controls {
+  z-index: 10;
+  background: #000000b3;
+  border-radius: 10px;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 25px;
+  display: flex;
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.controls button {
+  cursor: pointer;
+  background: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background .2s;
+}
+
+.controls button:hover {
+  background: #e0e0e0;
+}
+
+.controls button:active {
+  transform: scale(.98);
+}
+/*# sourceMappingURL=360-video-example.9f367d21.css.map */

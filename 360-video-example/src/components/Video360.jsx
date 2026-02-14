@@ -5,6 +5,7 @@ import * as THREE from 'three';
 export default function Video360({ src, onVideoReady }) {
   const videoRef = useRef(null);
   const textureRef = useRef(null);
+  const materialRef = useRef(null);
 
   // Create video element and texture once (persist across re-renders)
   if (!videoRef.current) {
@@ -45,14 +46,20 @@ export default function Video360({ src, onVideoReady }) {
     if (video.readyState >= video.HAVE_CURRENT_DATA) {
       texture.needsUpdate = true;
     }
+    // Ensure material knows about the texture
+    if (materialRef.current && materialRef.current.map !== texture) {
+      materialRef.current.map = texture;
+      materialRef.current.needsUpdate = true;
+    }
   });
 
   return (
     <mesh scale={[-1, 1, 1]}>
       <sphereGeometry args={[500, 64, 32]} />
       <meshBasicMaterial
+        ref={materialRef}
         map={textureRef.current}
-        side={THREE.FrontSide}
+        side={THREE.BackSide}
         toneMapped={false}
       />
     </mesh>
