@@ -1,0 +1,14 @@
+{
+  "name": "1-800-dogs",
+  "version": "1.0.0",
+  "description": "Twilio IVR phone tree for 1-800-DOGS, your premier dog agency",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "twilio": "^5.4.0"
+  }
+}
