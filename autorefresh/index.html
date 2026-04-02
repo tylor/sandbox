@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoRefresh - Page Change Monitor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #0a0a0f;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    .header {
+      padding: 20px 24px 0;
+    }
+
+    .header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .header h1 span {
+      color: #6366f1;
+    }
+
+    .header p {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .curl-row {
+      padding: 16px 24px 8px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #888;
+      font-weight: 600;
+    }
+
+    .field input, .field textarea {
+      background: #16161e;
+      border: 1px solid #2a2a3a;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: inherit;
+    }
+
+    .field input:focus, .field textarea:focus {
+      border-color: #6366f1;
+    }
+
+    .field-curl {
+      flex: 1;
+    }
+
+    .field-curl textarea {
+      width: 100%;
+      height: 56px;
+      resize: vertical;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .curl-help {
+      font-size: 0.68rem;
+      color: #555;
+      margin-top: 2px;
+    }
+
+    .curl-parsed {
+      font-size: 0.7rem;
+      color: #22c55e;
+      margin-top: 4px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      display: none;
+    }
+
+    .curl-parsed.visible { display: block; }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      padding: 8px 24px 16px;
+      align-items: end;
+      flex-wrap: wrap;
+    }
+
+    .field-selector input { width: 180px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8rem; }
+    .field-rate input { width: 80px; text-align: center; }
+
+    .btn {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      height: 36px;
+    }
+
+    .btn-start {
+      background: #6366f1;
+      color: #fff;
+    }
+
+    .btn-start:hover { background: #5558e6; }
+
+    .btn-start.active {
+      background: #ef4444;
+    }
+
+    .btn-start.active:hover { background: #dc2626; }
+
+    .btn-mute {
+      background: #16161e;
+      border: 1px solid #2a2a3a;
+      color: #888;
+    }
+
+    .btn-mute:hover { border-color: #6366f1; color: #fff; }
+    .btn-mute.muted { color: #ef4444; border-color: #ef4444; }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 24px;
+      background: #12121a;
+      border-top: 1px solid #1a1a2a;
+      border-bottom: 1px solid #1a1a2a;
+      font-size: 0.78rem;
+      flex-wrap: wrap;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #333;
+    }
+
+    .status-dot.idle { background: #555; }
+    .status-dot.monitoring { background: #22c55e; animation: pulse 2s infinite; }
+    .status-dot.changed { background: #f59e0b; animation: pulse 0.5s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .status-label { color: #888; }
+    .status-value { color: #ccc; font-variant-numeric: tabular-nums; }
+    .status-value.changed-text { color: #f59e0b; font-weight: 700; }
+
+    .log-toggle {
+      margin-left: auto;
+      background: none;
+      border: 1px solid #2a2a3a;
+      color: #888;
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      cursor: pointer;
+    }
+
+    .log-toggle:hover { color: #fff; border-color: #555; }
+
+    .log-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s;
+      background: #0e0e14;
+      border-bottom: 1px solid #1a1a2a;
+    }
+
+    .log-panel.open { max-height: 180px; }
+
+    .log-content {
+      padding: 10px 24px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: #666;
+      max-height: 170px;
+      overflow-y: auto;
+      line-height: 1.6;
+    }
+
+    .log-content .change { color: #f59e0b; }
+    .log-content .error { color: #ef4444; }
+    .log-content .info { color: #6366f1; }
+
+    .preview-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .preview-frame {
+      width: 100%;
+      height: calc(100vh - 290px);
+      border: none;
+      background: #111;
+    }
+
+    .empty-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: calc(100vh - 290px);
+      color: #333;
+      font-size: 0.9rem;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .empty-state .icon {
+      font-size: 2rem;
+      opacity: 0.3;
+    }
+
+    .alert-banner {
+      display: none;
+      padding: 12px 24px;
+      background: linear-gradient(90deg, #f59e0b22, #f59e0b11);
+      border-bottom: 1px solid #f59e0b44;
+      font-size: 0.85rem;
+      color: #f59e0b;
+      font-weight: 600;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .alert-banner:hover { background: linear-gradient(90deg, #f59e0b33, #f59e0b22); }
+    .alert-banner.visible { display: flex; }
+
+    .dismiss-btn {
+      margin-left: auto;
+      background: none;
+      border: 1px solid #f59e0b55;
+      color: #f59e0b;
+      padding: 2px 10px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Auto<span>Refresh</span></h1>
+    <p>Monitor any page for changes. Get notified instantly.</p>
+  </div>
+
+  <div class="curl-row">
+    <div class="field field-curl">
+      <label>Paste cURL command (right-click request in DevTools Network tab -> Copy as cURL)</label>
+      <textarea id="curlInput" placeholder="curl 'https://example.com/page' -H 'Cookie: session=abc123' ..." spellcheck="false"></textarea>
+      <div class="curl-parsed" id="curlParsed"></div>
+      <div class="curl-help">DevTools (F12) -> Network -> reload page -> right-click any request -> Copy -> Copy as cURL</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="field field-selector">
+      <label>CSS Selector</label>
+      <input type="text" id="selectorInput" value="#torrents" placeholder="#torrents" spellcheck="false">
+    </div>
+    <div class="field field-rate">
+      <label>Interval (s)</label>
+      <input type="number" id="rateInput" value="10" min="1" max="3600">
+    </div>
+    <button class="btn btn-start" id="startBtn" onclick="toggleMonitor()">Start</button>
+    <button class="btn btn-mute" id="muteBtn" onclick="toggleMute()">Mute</button>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-item">
+      <div class="status-dot idle" id="statusDot"></div>
+      <span class="status-label" id="statusLabel">Idle</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Checks:</span>
+      <span class="status-value" id="checkCount">0</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Changes:</span>
+      <span class="status-value" id="changeCount">0</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Last check:</span>
+      <span class="status-value" id="lastCheck">-</span>
+    </div>
+    <button class="log-toggle" onclick="toggleLog()">Log</button>
+  </div>
+
+  <div class="log-panel" id="logPanel">
+    <div class="log-content" id="logContent"></div>
+  </div>
+
+  <div class="alert-banner" id="alertBanner" onclick="dismissAlert()">
+    CHANGE DETECTED - click to dismiss
+    <button class="dismiss-btn">dismiss</button>
+  </div>
+
+  <div class="preview-container">
+    <div class="empty-state" id="emptyState">
+      <div class="icon">&#9673;</div>
+      Paste a cURL command and hit Start to begin monitoring
+    </div>
+    <iframe id="previewFrame" class="preview-frame" style="display:none"></iframe>
+  </div>
+
+  <script>
+    let monitoring = false;
+    let intervalId = null;
+    let muted = false;
+    let lastHash = null;
+    let checks = 0;
+    let changes = 0;
+    let audioCtx = null;
+    let parsedCurl = null;
+    let wakeLock = null;
+    let silentVideo = null;
+
+    // --- cURL parser ---
+
+    function parseCurlCommand(raw) {
+      // Normalize: join backslash-newlines, collapse whitespace
+      const str = raw.replace(/\\\s*\n/g, ' ').trim();
+
+      if (!str.startsWith('curl ')) return null;
+
+      let url = null;
+      const headers = {};
+
+      // Tokenize respecting single and double quotes
+      const tokens = [];
+      let current = '';
+      let inQ = null;
+      for (let i = 5; i < str.length; i++) {
+        const ch = str[i];
+        if (inQ) {
+          if (ch === inQ) { inQ = null; }
+          else { current += ch; }
+        } else if (ch === "'" || ch === '"') {
+          inQ = ch;
+        } else if (ch === ' ') {
+          if (current) { tokens.push(current); current = ''; }
+        } else {
+          current += ch;
+        }
+      }
+      if (current) tokens.push(current);
+
+      let i = 0;
+      while (i < tokens.length) {
+        const t = tokens[i];
+        if (t === '-H' || t === '--header') {
+          i++;
+          if (i < tokens.length) {
+            const colon = tokens[i].indexOf(':');
+            if (colon > 0) {
+              const name = tokens[i].slice(0, colon).trim();
+              const value = tokens[i].slice(colon + 1).trim();
+              headers[name] = value;
+            }
+          }
+        } else if (t === '-X' || t === '--request' || t === '--compressed' || t === '-s' || t === '--silent' || t === '-k' || t === '--insecure') {
+          // Skip -X and its argument, skip flags
+          if (t === '-X' || t === '--request') i++;
+        } else if (t.startsWith('-')) {
+          // Skip unknown flags; if next token doesn't start with -, it's probably the flag's value
+          if (i + 1 < tokens.length && !tokens[i + 1].startsWith('-') && !tokens[i + 1].startsWith('http')) {
+            i++;
+          }
+        } else if (!url && (t.startsWith('http://') || t.startsWith('https://'))) {
+          url = t;
+        }
+        i++;
+      }
+
+      if (!url) return null;
+
+      // Strip URL fragment (that's a CSS selector, not sent to server)
+      const hashIdx = url.indexOf('#');
+      if (hashIdx > -1) url = url.slice(0, hashIdx);
+
+      return { url, headers };
+    }
+
+    function onCurlInput() {
+      const raw = document.getElementById('curlInput').value;
+      const parsed = parseCurlCommand(raw);
+      const el = document.getElementById('curlParsed');
+
+      if (parsed) {
+        parsedCurl = parsed;
+        const headerCount = Object.keys(parsed.headers).length;
+        const hasCookie = 'Cookie' in parsed.headers;
+        let info = `URL: ${parsed.url} | ${headerCount} headers`;
+        if (hasCookie) info += ' (inc. cookie)';
+        el.textContent = info;
+        el.classList.add('visible');
+      } else {
+        parsedCurl = null;
+        el.classList.remove('visible');
+      }
+    }
+
+    document.getElementById('curlInput').addEventListener('input', onCurlInput);
+    document.getElementById('curlInput').addEventListener('paste', () => {
+      // Paste event fires before value updates, so defer
+      setTimeout(onCurlInput, 0);
+    });
+
+    // --- Wake lock (prevent sleep) ---
+
+    async function acquireWakeLock() {
+      // Method 1: Screen Wake Lock API
+      if ('wakeLock' in navigator) {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLock.addEventListener('release', () => { wakeLock = null; });
+          log('Wake lock acquired (screen)', 'info');
+        } catch (e) {
+          log(`Wake lock failed: ${e.message}`, 'error');
+        }
+      }
+
+      // Method 2: Silent video stream — keeps tab "active" like YouTube
+      // Works even when Wake Lock API isn't available or tab is backgrounded
+      const canvas = document.createElement('canvas');
+      canvas.width = 1;
+      canvas.height = 1;
+      silentVideo = document.createElement('video');
+      silentVideo.muted = true;
+      silentVideo.setAttribute('playsinline', '');
+      silentVideo.srcObject = canvas.captureStream(1);
+      silentVideo.play().catch(() => {});
+    }
+
+    function releaseWakeLock() {
+      if (wakeLock) { wakeLock.release(); wakeLock = null; }
+      if (silentVideo) { silentVideo.pause(); silentVideo.srcObject = null; silentVideo = null; }
+    }
+
+    // Re-acquire wake lock when tab becomes visible again (browser releases it on hide)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && monitoring && !wakeLock) {
+        acquireWakeLock();
+      }
+    });
+
+    // --- Audio ---
+
+    function getAudioCtx() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return audioCtx;
+    }
+
+    function playAlert() {
+      if (muted) return;
+      const ctx = getAudioCtx();
+      const now = ctx.currentTime;
+
+      [660, 880, 1100].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'square';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.15, now + i * 0.18);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.18 + 0.16);
+        osc.start(now + i * 0.18);
+        osc.stop(now + i * 0.18 + 0.16);
+      });
+
+      setTimeout(() => {
+        if (muted) return;
+        const now2 = ctx.currentTime;
+        [660, 880, 1100].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = 'square';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.15, now2 + i * 0.18);
+          gain.gain.exponentialRampToValueAtTime(0.001, now2 + i * 0.18 + 0.16);
+          osc.start(now2 + i * 0.18);
+          osc.stop(now2 + i * 0.18 + 0.16);
+        });
+      }, 700);
+    }
+
+    // --- Hashing & content extraction ---
+
+    async function hashContent(text) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(text);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function log(msg, cls = '') {
+      const el = document.getElementById('logContent');
+      const time = new Date().toLocaleTimeString();
+      el.innerHTML += `<div class="${cls}">[${time}] ${msg}</div>`;
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function updateStatus() {
+      document.getElementById('checkCount').textContent = checks;
+      document.getElementById('changeCount').textContent = changes;
+      const changeEl = document.getElementById('changeCount');
+      if (changes > 0) changeEl.classList.add('changed-text');
+    }
+
+    function renderPreview(html, selector) {
+      const frame = document.getElementById('previewFrame');
+
+      if (!selector) {
+        const blob = new Blob([html], { type: 'text/html' });
+        frame.src = URL.createObjectURL(blob);
+        return;
+      }
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const target = doc.querySelector(selector);
+
+      // Collect all styles from the original page
+      const styles = [...doc.querySelectorAll('style, link[rel="stylesheet"]')]
+        .map(el => el.outerHTML).join('\n');
+
+      // Build a focused preview: original styles + just the matched element
+      const focused = `<!DOCTYPE html>
+<html><head><base href="${parsedCurl ? parsedCurl.url : ''}">${styles}</head>
+<body>${target ? target.outerHTML : '<p>Selector not found</p>'}</body></html>`;
+
+      const blob = new Blob([focused], { type: 'text/html' });
+      frame.src = URL.createObjectURL(blob);
+    }
+
+    function extractContent(html, selector) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+
+      if (!selector) return { content: html, matchInfo: 'full page', debug: null };
+
+      const el = doc.querySelector(selector);
+      if (!el) {
+        const ids = [...doc.querySelectorAll('[id]')].map(e => `${e.tagName.toLowerCase()}#${e.id}`);
+        const tables = [...doc.querySelectorAll('table')].map(e => {
+          const id = e.id ? `#${e.id}` : '';
+          const cls = e.className ? `.${e.className.split(/\s+/).join('.')}` : '';
+          return `table${id}${cls}`;
+        });
+        const divs = [...doc.querySelectorAll('div[id], div[class]')].slice(0, 30).map(e => {
+          const id = e.id ? `#${e.id}` : '';
+          const cls = e.className ? `.${e.className.split(/\s+/).join('.')}` : '';
+          return `div${id}${cls}`;
+        });
+        return {
+          content: null,
+          matchInfo: null,
+          debug: { ids: ids.slice(0, 40), tables, divs },
+        };
+      }
+
+      return { content: el.innerHTML, matchInfo: `${selector} (${el.children.length} children)`, debug: null };
+    }
+
+    // --- Monitoring ---
+
+    async function checkPage() {
+      if (!parsedCurl) return;
+
+      const selector = document.getElementById('selectorInput').value.trim();
+
+      try {
+        const resp = await fetch('/proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: parsedCurl.url, headers: parsedCurl.headers }),
+        });
+
+        if (!resp.ok) throw new Error(`Proxy returned HTTP ${resp.status}`);
+
+        const data = await resp.json();
+
+        if (data.error) throw new Error(data.error);
+        if (data.status >= 400) throw new Error(`Target returned HTTP ${data.status}`);
+
+        const { content, matchInfo, debug } = extractContent(data.body, selector);
+
+        if (content === null) {
+          checks++;
+          document.getElementById('lastCheck').textContent = new Date().toLocaleTimeString();
+          log(`Selector "${selector}" not found on page`, 'error');
+          if (debug) {
+            if (debug.ids.length) log(`IDs found: ${debug.ids.join(', ')}`, 'info');
+            if (debug.tables.length) log(`Tables: ${debug.tables.join(', ')}`, 'info');
+            if (debug.divs.length) log(`Divs: ${debug.divs.join(', ')}`, 'info');
+            if (!debug.ids.length && !debug.tables.length && !debug.divs.length) log('Page appears empty or is a login/redirect page', 'error');
+          }
+          renderPreview(data.body, selector);
+          updateStatus();
+          return;
+        }
+
+        const hash = await hashContent(content);
+
+        checks++;
+        document.getElementById('lastCheck').textContent = new Date().toLocaleTimeString();
+
+        if (lastHash === null) {
+          lastHash = hash;
+          log(`Baseline captured [${matchInfo}] (${hash.slice(0, 12)}...)`, 'info');
+          renderPreview(data.body, selector);
+        } else if (hash !== lastHash) {
+          lastHash = hash;
+          changes++;
+          log(`CHANGE DETECTED [${matchInfo}] new hash: ${hash.slice(0, 12)}...`, 'change');
+          playAlert();
+          document.getElementById('alertBanner').classList.add('visible');
+          document.getElementById('statusDot').className = 'status-dot changed';
+          renderPreview(data.body, selector);
+        } else {
+          log(`No change [${matchInfo}] (${hash.slice(0, 12)}...)`, '');
+        }
+
+        updateStatus();
+      } catch (e) {
+        checks++;
+        document.getElementById('lastCheck').textContent = new Date().toLocaleTimeString();
+        log(`Error: ${e.message}`, 'error');
+        updateStatus();
+      }
+    }
+
+    function toggleMonitor() {
+      const btn = document.getElementById('startBtn');
+      const rate = parseInt(document.getElementById('rateInput').value, 10) || 10;
+
+      if (monitoring) {
+        clearInterval(intervalId);
+        intervalId = null;
+        monitoring = false;
+        btn.textContent = 'Start';
+        btn.classList.remove('active');
+        document.getElementById('statusDot').className = 'status-dot idle';
+        document.getElementById('statusLabel').textContent = 'Idle';
+        releaseWakeLock();
+        log('Monitoring stopped.', 'info');
+        return;
+      }
+
+      if (!parsedCurl) {
+        document.getElementById('curlInput').focus();
+        return;
+      }
+
+      monitoring = true;
+      lastHash = null;
+      checks = 0;
+      changes = 0;
+      btn.textContent = 'Stop';
+      btn.classList.add('active');
+      document.getElementById('statusDot').className = 'status-dot monitoring';
+      document.getElementById('statusLabel').textContent = 'Monitoring';
+      document.getElementById('alertBanner').classList.remove('visible');
+      document.getElementById('logContent').innerHTML = '';
+
+      const frame = document.getElementById('previewFrame');
+      const empty = document.getElementById('emptyState');
+      frame.style.display = 'block';
+      empty.style.display = 'none';
+
+      acquireWakeLock();
+      log(`Started monitoring: ${parsedCurl.url} (every ${rate}s)`, 'info');
+
+      checkPage();
+      intervalId = setInterval(() => checkPage(), rate * 1000);
+    }
+
+    function toggleMute() {
+      muted = !muted;
+      const btn = document.getElementById('muteBtn');
+      btn.classList.toggle('muted', muted);
+      btn.textContent = muted ? 'Unmute' : 'Mute';
+      log(muted ? 'Notifications muted.' : 'Notifications unmuted.', 'info');
+    }
+
+    function toggleLog() {
+      document.getElementById('logPanel').classList.toggle('open');
+    }
+
+    function dismissAlert() {
+      document.getElementById('alertBanner').classList.remove('visible');
+      document.getElementById('statusDot').className = 'status-dot monitoring';
+    }
+  </script>
+</body>
+</html>
