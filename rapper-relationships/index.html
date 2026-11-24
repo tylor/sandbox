@@ -1,0 +1,786 @@
+<title>Feat. &amp; Feuds</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one wide "map" of the rap world (West left, East right, South low, Midwest high) with a liner-notes panel beside it. */
+:root {
+  --bg: #eef0f3;
+  --surface: #ffffff;
+  --ink: #111318;
+  --ink-2: #4a505c;
+  --muted: #737a87;
+  --line: #d8dce3;
+  --edge: #5d6472;
+  --beef: #c8322f;
+  --west: #2a78d6;
+  --east: #eb6834;
+  --south: #1baf7a;
+  --midwest: #4a3aa7;
+  --north: #8a909b;
+  --chip: #e4e7ec;
+  --focus: #2a78d6;
+  --f-display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --f-body: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1013; --surface: #16191e; --ink: #eceef2; --ink-2: #b6bcc6; --muted: #858c98;
+    --line: #2a2f37; --edge: #a2a9b5; --beef: #ef6b64; --west: #3987e5; --east: #d95926;
+    --south: #199e70; --midwest: #b6a6f4; --north: #8f95a0; --chip: #232830; --focus: #6aa8f0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1013; --surface: #16191e; --ink: #eceef2; --ink-2: #b6bcc6; --muted: #858c98;
+  --line: #2a2f37; --edge: #a2a9b5; --beef: #ef6b64; --west: #3987e5; --east: #d95926;
+  --south: #199e70; --midwest: #b6a6f4; --north: #8f95a0; --chip: #232830; --focus: #6aa8f0;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+.wrap > * { min-width: 0; }
+
+header { display: grid; gap: 10px; }
+.eyebrow {
+  font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+}
+h1 {
+  font-family: var(--f-display); font-weight: 900; font-size: clamp(56px, 9vw, 112px);
+  line-height: .86; margin: 0; letter-spacing: -.01em; text-transform: uppercase; text-wrap: balance;
+}
+h1 .amp { color: var(--beef); font-weight: 700; }
+.lede { margin: 0; max-width: 62ch; color: var(--ink-2); font-size: 16px; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+.group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.group-label { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+button, select {
+  font: inherit; color: inherit;
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+  padding: 6px 11px; border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 500;
+}
+.chip:hover { border-color: var(--edge); color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.chip .swatch { width: 18px; height: 0; border-top: 2px solid currentColor; }
+.chip .swatch.dash { border-top: 2px dashed var(--beef); }
+.chip[aria-pressed="true"] .swatch.dash { border-top-color: var(--beef); }
+.story { border-style: dashed; }
+select {
+  border: 1px solid var(--line); background: var(--surface); padding: 6px 10px; border-radius: 8px; font-size: 13px; max-width: 100%;
+}
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; }
+@media (max-width: 960px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+
+.graph {
+  position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  min-width: 0;
+}
+.graph svg { display: block; width: 100%; height: 680px; cursor: grab; }
+@media (max-width: 640px) { .graph svg { height: 560px; } }
+.graph svg:active { cursor: grabbing; }
+.legend {
+  position: absolute; left: 12px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 4px 14px; max-width: calc(100% - 110px);
+  font-size: 12px; color: var(--ink-2); background: color-mix(in srgb, var(--surface) 88%, transparent); padding: 6px 10px; border-radius: 8px;
+  pointer-events: none;
+}
+.legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+.zoom { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 4px; }
+.zoom button {
+  width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 16px; color: var(--ink-2);
+}
+.zoom button:hover { color: var(--ink); border-color: var(--edge); }
+.hint { position: absolute; left: 12px; top: 10px; font-size: 12px; color: var(--muted); pointer-events: none; }
+
+.node circle { stroke: var(--surface); stroke-width: 2; cursor: pointer; transition: opacity .15s; }
+.node text {
+  font-family: var(--f-body); font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 4px;
+  stroke-linejoin: round; pointer-events: none; transition: opacity .15s;
+}
+.node.sel circle { stroke: var(--ink); stroke-width: 2.5; }
+.link { stroke: var(--edge); fill: none; stroke-linecap: round; transition: opacity .15s, stroke .15s; }
+.beef { stroke: var(--beef); fill: none; stroke-dasharray: 5 4; stroke-width: 1.6; transition: opacity .15s; }
+.hit { stroke: transparent; fill: none; stroke-width: 12; cursor: pointer; }
+.dim { opacity: .09; }
+.link.hot { stroke: var(--ink); }
+
+.tip {
+  position: absolute; pointer-events: none; background: var(--ink); color: var(--surface); padding: 8px 10px; border-radius: 8px;
+  font-size: 12.5px; line-height: 1.4; max-width: 260px; box-shadow: 0 4px 16px rgba(0,0,0,.18); z-index: 3;
+}
+.tip b { font-size: 13.5px; }
+
+aside.panel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 20px;
+  display: grid; gap: 14px; min-width: 0; max-height: 680px; overflow-y: auto;
+}
+@media (max-width: 960px) { aside.panel { max-height: none; } }
+.panel h2 {
+  font-family: var(--f-display); font-weight: 900; text-transform: uppercase; font-size: 34px; line-height: .95; margin: 0; text-wrap: balance;
+}
+.panel h2 .x { color: var(--muted); font-weight: 700; padding: 0 .12em; }
+.panel h3 {
+  font-family: var(--f-mono); font-weight: 500; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 4px 0 0;
+}
+.panel p { margin: 0; color: var(--ink-2); }
+.back {
+  justify-self: start; background: none; border: 0; padding: 0; color: var(--muted); cursor: pointer; font-size: 13px; font-family: var(--f-mono);
+}
+.back:hover { color: var(--ink); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 13px; color: var(--ink-2); }
+
+.rows { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center;
+  padding: 8px 8px; margin: 0 -8px; border-radius: 8px; cursor: pointer; background: none; border: 0; text-align: left; width: calc(100% + 16px);
+}
+.row:hover { background: var(--chip); }
+.row .who { font-weight: 600; display: flex; align-items: center; gap: 7px; min-width: 0; }
+.row .who span.n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--chip); overflow: hidden; }
+.row:hover .bar { background: var(--line); }
+.row .bar i { display: block; height: 100%; background: var(--edge); border-radius: 2px; }
+.row .bd { font-family: var(--f-mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.row .beefmark { color: var(--beef); font-family: var(--f-mono); font-size: 11px; }
+
+.credits { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.credit { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 2px 12px; }
+.tag {
+  font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; text-align: center;
+  padding: 2px 0; border-radius: 4px; border: 1px solid var(--line); color: var(--ink-2); align-self: start; margin-top: 2px;
+}
+.tag.beef-t { border-color: var(--beef); color: var(--beef); }
+.credit .t { font-weight: 600; }
+.credit .y { font-family: var(--f-mono); font-size: 12px; color: var(--muted); margin-left: 6px; font-weight: 400; }
+.credit .note { grid-column: 2; font-size: 13.5px; color: var(--ink-2); }
+.credit .with { grid-column: 2; font-size: 12.5px; color: var(--muted); }
+.story-note { border-left: 3px solid var(--line); padding-left: 12px; }
+
+.foot { font-size: 12.5px; color: var(--muted); max-width: 80ch; margin: 0; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Hip-hop's relationship web · 1987 – 2024</div>
+    <h1>Feat. <span class="amp">&amp;</span> Feuds</h1>
+    <p class="lede">Who showed up on whose records, shared a stage, or signed to the same label. Thicker lines mean a closer working relationship. Red dashes mark a public beef, and plenty of pairs have both.</p>
+  </header>
+
+  <div class="controls">
+    <div class="group" role="group" aria-label="Relationship types">
+      <span class="group-label">Show</span>
+      <button class="chip" id="t-feature" data-type="feature" aria-pressed="true"><span class="swatch"></span>Features</button>
+      <button class="chip" id="t-stage" data-type="stage" aria-pressed="true"><span class="swatch"></span>Shared stage</button>
+      <button class="chip" id="t-crew" data-type="crew" aria-pressed="true"><span class="swatch"></span>Group / label</button>
+      <button class="chip" id="t-beef" data-type="beef" aria-pressed="true"><span class="swatch dash"></span>Beef</button>
+    </div>
+    <div class="group">
+      <label class="group-label" for="artist-select">Artist</label>
+      <select id="artist-select"><option value="">Pick an artist…</option></select>
+    </div>
+    <div class="group" id="stories">
+      <span class="group-label">Stories</span>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="graph" id="graph">
+      <div class="hint" id="hint">Hover to trace connections · click an artist or a line</div>
+      <svg id="svg" role="img" aria-label="Network of rappers and their relationships"></svg>
+      <div class="legend" id="legend"></div>
+      <div class="zoom">
+        <button id="zoom-in" aria-label="Zoom in">+</button>
+        <button id="zoom-out" aria-label="Zoom out">−</button>
+        <button id="zoom-reset" aria-label="Reset view">⟲</button>
+      </div>
+      <div class="tip" id="tip" hidden></div>
+    </div>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+
+  <p class="foot">Compiled from album credits and well-documented performances, signings and feuds. It's a curated slice of 39 acts, not a complete discography. Groups (Tha Dogg Pound, Mobb Deep, UGK, OutKast, Bone Thugs) appear as one act. Posthumous releases are counted and labelled as such. Strength weights a shared group or label highest, then a feature, then a shared stage; tracks and shows with many guests count a little less per pair.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+(() => {
+const REGIONS = {
+  west:    { name: 'West Coast', v: '--west',    ax: 0.18, ay: 0.55 },
+  east:    { name: 'East Coast', v: '--east',    ax: 0.80, ay: 0.50 },
+  south:   { name: 'South',      v: '--south',   ax: 0.52, ay: 0.86 },
+  midwest: { name: 'Midwest',    v: '--midwest', ax: 0.50, ay: 0.16 },
+  north:   { name: 'Toronto',    v: '--north',   ax: 0.80, ay: 0.12 },
+};
+
+const ARTISTS = [
+  ['tupac','2Pac','west','Harlem-born, Oakland- and L.A.-raised. Death Row, 1995–96.'],
+  ['snoop','Snoop Dogg','west','Long Beach. Death Row, then No Limit, Priority and beyond.'],
+  ['dre','Dr. Dre','west','Compton. N.W.A, Death Row, then Aftermath.'],
+  ['cube','Ice Cube','west','South Central L.A. Left N.W.A in 1989.'],
+  ['eazy','Eazy-E','west','Compton. Founded Ruthless Records. Died 1995.'],
+  ['ren','MC Ren','west','Compton. N.W.A.'],
+  ['nate','Nate Dogg','west','Long Beach. The hook singer of the G-funk era. Died 2011.'],
+  ['warren','Warren G','west','Long Beach. Dr. Dre\'s stepbrother.'],
+  ['dpg','Tha Dogg Pound','west','Kurupt and Daz Dillinger.'],
+  ['xzibit','Xzibit','west','L.A., via Detroit and Albuquerque.'],
+  ['game','The Game','west','Compton. Aftermath and G-Unit in the mid-2000s.'],
+  ['kendrick','Kendrick Lamar','west','Compton. Top Dawg and Aftermath.'],
+  ['e40','E-40','west','Vallejo, Bay Area.'],
+  ['short','Too $hort','west','Oakland.'],
+  ['biggie','The Notorious B.I.G.','east','Brooklyn. Bad Boy. Died 1997.','Biggie'],
+  ['diddy','Diddy','east','Harlem. Founded Bad Boy; recorded as Puff Daddy and P. Diddy.'],
+  ['kim','Lil\' Kim','east','Brooklyn. Junior M.A.F.I.A.'],
+  ['jay','Jay-Z','east','Brooklyn. Roc-A-Fella, later Def Jam president.'],
+  ['nas','Nas','east','Queensbridge, Queens.'],
+  ['mobb','Mobb Deep','east','Prodigy and Havoc, Queensbridge.'],
+  ['busta','Busta Rhymes','east','Brooklyn. Leaders of the New School, Flipmode.'],
+  ['meth','Method Man','east','Staten Island. Wu-Tang Clan.'],
+  ['redman','Redman','east','Newark, New Jersey.'],
+  ['rae','Raekwon','east','Staten Island. Wu-Tang Clan.'],
+  ['ghost','Ghostface Killah','east','Staten Island. Wu-Tang Clan.','Ghostface'],
+  ['dmx','DMX','east','Yonkers. Ruff Ryders. Died 2021.'],
+  ['fifty','50 Cent','east','South Jamaica, Queens. Shady/Aftermath, G-Unit.'],
+  ['nicki','Nicki Minaj','east','Queens. Young Money.'],
+  ['wayne','Lil Wayne','south','New Orleans. Cash Money, Young Money.'],
+  ['outkast','OutKast','south','André 3000 and Big Boi, Atlanta.'],
+  ['ugk','UGK','south','Bun B and Pimp C, Port Arthur, Texas.'],
+  ['scarface','Scarface','south','Houston. Geto Boys; ran Def Jam South.'],
+  ['luda','Ludacris','south','Atlanta. Def Jam South.'],
+  ['ti','T.I.','south','Atlanta. Grand Hustle.'],
+  ['ross','Rick Ross','south','Miami. Maybach Music.'],
+  ['em','Eminem','midwest','Detroit. Shady/Aftermath.'],
+  ['kanye','Kanye West','midwest','Chicago. Roc-A-Fella, G.O.O.D. Music.'],
+  ['bone','Bone Thugs-n-Harmony','midwest','Cleveland. Signed by Eazy-E to Ruthless.','Bone Thugs'],
+  ['drake','Drake','north','Toronto. Young Money, OVO.'],
+].map(([id, name, region, blurb, label]) => ({ id, name, region, blurb, label: label || name }));
+const A = Object.fromEntries(ARTISTS.map(a => [a.id, a]));
+
+// type, year, title, artists (or sides for beef), note, hub
+const EVENTS = [];
+const f = (year, title, artists, note = '', hub) => EVENTS.push({ type: 'feature', year, title, artists, note, hub });
+const s = (year, title, artists, note = '') => EVENTS.push({ type: 'stage', year, title, artists, note });
+const c = (year, title, artists, note = '', hub) => EVENTS.push({ type: 'crew', year, title, artists, note, hub });
+const b = (year, title, sides, note = '') => EVENTS.push({ type: 'beef', year, title, sides, note });
+
+// Groups and labels
+c(1987, 'N.W.A', ['dre','cube','eazy','ren'], 'Ice Cube left in 1989 over money.');
+c(1990, '213', ['snoop','warren','nate'], 'Long Beach trio formed before any of them were famous.');
+c(1992, 'Death Row Records', ['dre','snoop','dpg','nate','tupac'], '2Pac joined in late 1995 when Suge Knight posted his bail. Dre left in 1996.');
+c(1993, 'Wu-Tang Clan', ['meth','rae','ghost']);
+c(1994, 'Ruthless Records', ['eazy','bone'], 'Eazy-E signed Bone Thugs to his label.', 'eazy');
+c(1994, 'Bad Boy Records', ['biggie','diddy']);
+c(1995, 'Junior M.A.F.I.A.', ['biggie','kim'], 'Biggie\'s protégé group, which launched Lil\' Kim.');
+c(2000, 'Def Jam South', ['scarface','luda'], 'Scarface ran the label and signed Ludacris.', 'scarface');
+c(2002, 'Roc-A-Fella Records', ['jay','kanye'], 'Kanye produced for Jay-Z before he signed as a rapper.');
+c(2002, 'Shady / Aftermath', ['dre','em','fifty'], 'Eminem and Dr. Dre signed 50 Cent together.');
+c(2004, 'G-Unit', ['fifty','game'], 'The Game was brought into G-Unit until the 2005 split.');
+c(2004, 'Aftermath Entertainment', ['dre','game'], 'The Documentary came out on Aftermath.');
+c(2005, 'Aftermath Entertainment', ['dre','busta'], 'Busta signed to Aftermath; The Big Bang came out in 2006.');
+c(2005, 'G-Unit Records', ['fifty','mobb'], 'Mobb Deep signed to 50 Cent\'s label.');
+c(2006, 'Def Jam', ['jay','nas','ross'], 'As Def Jam president, Jay-Z signed Nas and Rick Ross.', 'jay');
+c(2009, 'Young Money', ['wayne','nicki','drake'], 'Lil Wayne\'s label and crew.');
+c(2012, 'Aftermath Entertainment', ['dre','kendrick'], 'Kendrick signed to Aftermath alongside Top Dawg.');
+c(2020, 'Mount Westmore', ['snoop','cube','e40','short'], 'West Coast supergroup. Their album Bad MFs came out in 2022.');
+
+// Features
+f(1992, '"Nuthin\' but a \'G\' Thang"', ['dre','snoop'], 'Snoop\'s breakout, on The Chronic.');
+f(1992, 'The Chronic', ['dre','snoop','dpg','nate'], 'Guest spots across Dr. Dre\'s debut album.', 'dre');
+f(1993, 'Doggystyle', ['snoop','dre','dpg','nate','warren'], 'Produced by Dr. Dre, with guests from the Death Row family.', 'snoop');
+f(1994, '"Regulate"', ['warren','nate']);
+f(1994, '"Natural Born Killaz"', ['dre','cube'], 'Their first record together since N.W.A.');
+f(1994, '"Hand of the Dead Body"', ['scarface','cube']);
+f(1994, '"The What"', ['biggie','meth'], 'From Ready to Die.');
+f(1994, '"Flava in Ya Ear (Remix)"', ['biggie','busta'], 'Craig Mack\'s remix, with LL Cool J and Rampage.');
+f(1995, '"California Love"', ['tupac','dre']);
+f(1995, '"Runnin\' from tha Police"', ['tupac','biggie'], 'Recorded in 1994, before the falling-out.');
+f(1995, '"Get Money"', ['kim','biggie']);
+f(1995, '"Eye for an Eye (Your Beef Is Mines)"', ['mobb','nas','rae'], 'From The Infamous.');
+f(1995, '"Verbal Intercourse"', ['rae','nas','ghost'], 'From Only Built 4 Cuban Linx.');
+f(1996, '"Got My Mind Made Up"', ['tupac','dpg','meth','redman'], 'From All Eyez on Me.');
+f(1996, '"2 of Amerikaz Most Wanted"', ['tupac','snoop'], 'From All Eyez on Me.');
+f(1996, '"All About U"', ['tupac','snoop','nate']);
+f(1996, '"Skandalouz"', ['tupac','nate']);
+f(1996, '"Ain\'t Hard 2 Find"', ['tupac','e40'], 'With B-Legit, C-Bo, D-Shot and Richie Rich.');
+f(1996, '"Brooklyn\'s Finest"', ['jay','biggie'], 'From Reasonable Doubt.');
+f(1996, '"Big Momma Thang"', ['kim','jay']);
+f(1996, '"Rapper\'s Ball"', ['e40','short']);
+f(1997, '"Smile"', ['scarface','tupac'], 'Released after 2Pac\'s death.');
+f(1997, '"Thug Luv"', ['bone','tupac']);
+f(1997, '"Notorious Thugs"', ['biggie','bone'], 'From Life After Death.');
+f(1997, '"The World Is Filled…"', ['biggie','diddy','short']);
+f(1997, '"I Love the Dough"', ['biggie','jay']);
+f(1997, '"Mo Money Mo Problems"', ['biggie','diddy']);
+f(1997, '"It\'s All About the Benjamins (Remix)"', ['diddy','biggie','kim']);
+f(1998, '"Money, Cash, Hoes"', ['jay','dmx']);
+f(1998, '"Grand Finale"', ['dmx','meth','nas'], 'From the Belly soundtrack, with Ja Rule.');
+f(1999, '"Hate Me Now"', ['nas','diddy']);
+f(1999, '"Watch Me"', ['jay','dre']);
+f(1999, '"Still D.R.E."', ['dre','snoop'], 'Jay-Z wrote the lyrics.');
+f(1999, '"Forgot About Dre" and "Guilty Conscience"', ['dre','em']);
+f(1999, '"What\'s the Difference"', ['dre','em','xzibit']);
+f(1999, '"Bitch Please"', ['snoop','xzibit','nate']);
+f(1999, '"Quiet Storm (Remix)"', ['mobb','kim']);
+f(1999, '"Dead Wrong"', ['biggie','em'], 'Posthumous release.');
+f(1999, '"Dangerous MC\'s"', ['biggie','snoop','busta'], 'Posthumous release.');
+f(1999, 'Blackout!', ['meth','redman'], 'Joint album. They also starred in How High (2001).');
+f(2000, '"The Next Episode"', ['dre','snoop','dpg','nate'], 'Kurupt of Tha Dogg Pound.');
+f(2000, '"Bitch Please II"', ['em','dre','snoop','xzibit','nate']);
+f(2000, '"Don\'t Approach Me"', ['xzibit','em']);
+f(2000, '"Big Pimpin\'"', ['jay','ugk']);
+f(2001, '"Renegade"', ['jay','em'], 'From The Blueprint. Eminem produced it.');
+f(2001, '"Area Codes"', ['luda','nate']);
+f(2002, '"Guess Who\'s Back"', ['scarface','jay']);
+f(2002, '"Pass the Courvoisier, Part II"', ['busta','diddy']);
+f(2003, '"21 Questions"', ['fifty','nate']);
+f(2003, '"Patiently Waiting"', ['fifty','em']);
+f(2003, '"P.I.M.P. (Remix)"', ['fifty','snoop']);
+f(2003, '"One Day at a Time (Em\'s Version)"', ['tupac','em'], 'Posthumous. Eminem also produced 2Pac\'s Loyal to the Game (2004).');
+f(2005, '"Hate It or Love It" and "How We Do"', ['game','fifty']);
+f(2005, '"Like Father, Like Son"', ['game','busta']);
+f(2005, '"Shake That"', ['em','nate']);
+f(2006, '"Go to Church"', ['cube','snoop']);
+f(2006, '"Hollywood Divorce"', ['outkast','wayne','snoop']);
+f(2006, '"Wouldn\'t Get Far"', ['game','kanye']);
+f(2006, '"Still Dreaming"', ['nas','kanye']);
+f(2006, '"Black Republican"', ['nas','jay'], 'Their first song together after the feud.');
+f(2006, '"Hustlin\' (Remix)"', ['ross','jay']);
+f(2007, '"International Players Anthem"', ['ugk','outkast']);
+f(2007, '"Barry Bonds"', ['kanye','wayne']);
+f(2008, '"Swagga Like Us"', ['jay','ti','kanye','wayne']);
+f(2008, '"Mr. Carter"', ['wayne','jay']);
+f(2008, '"My Life"', ['game','wayne']);
+f(2008, '"Wish You Would"', ['luda','ti']);
+f(2009, '"Forever"', ['drake','kanye','wayne','em']);
+f(2009, '"Uptown"', ['drake','ugk','wayne'], 'Bun B of UGK.');
+f(2009, '"Crack a Bottle"', ['em','dre','fifty']);
+f(2010, '"Drop the World" and "No Love"', ['wayne','em']);
+f(2010, '"Monster"', ['kanye','jay','ross','nicki']);
+f(2010, '"Roman\'s Revenge"', ['nicki','em']);
+f(2010, '"Aston Martin Music"', ['ross','drake']);
+f(2011, 'Watch the Throne', ['jay','kanye'], 'Joint album.');
+f(2011, '"John (If I Die Today)"', ['wayne','ross']);
+f(2011, '"Look at Me Now"', ['wayne','busta'], 'Chris Brown\'s single.');
+f(2011, '"The City"', ['game','kendrick']);
+f(2012, '"Poetic Justice"', ['kendrick','drake']);
+f(2012, '"F**kin\' Problems"', ['drake','kendrick'], 'A$AP Rocky\'s single, with 2 Chainz.');
+f(2013, '"Bitch, Don\'t Kill My Vibe (Remix)"', ['kendrick','jay']);
+f(2013, '"Love Game"', ['em','kendrick']);
+f(2013, '"Pound Cake"', ['drake','jay']);
+f(2014, '"Calm Down"', ['busta','em']);
+f(2015, '"Institutionalized"', ['kendrick','snoop'], 'From To Pimp a Butterfly.');
+f(2015, 'Compton', ['dre','kendrick','em','cube','snoop','xzibit'], 'Guest spots on Dr. Dre\'s third album.', 'dre');
+f(2016, '"No More Parties in LA"', ['kanye','kendrick']);
+f(2018, '"Mona Lisa"', ['wayne','kendrick']);
+
+// Shared stages
+s(1993, 'Freestyle at Madison Square Garden', ['tupac','biggie'], 'A well-known clip shows the two trading verses on stage, back when they were friends.');
+s(1996, 'House of Blues, Los Angeles', ['tupac','snoop'], 'Performed together in July 1996, about two months before 2Pac was killed.');
+s(1999, 'Hard Knock Life Tour', ['jay','dmx','meth','redman'], 'Arena tour that also featured Ja Rule and DJ Clue.');
+s(2000, 'Up in Smoke Tour', ['dre','snoop','cube','em','xzibit','nate','dpg'], 'Dr. Dre\'s arena tour. Kurupt represented Tha Dogg Pound.');
+s(2002, 'Anger Management Tour', ['em','luda','xzibit'], 'Eminem\'s tour, also with D12 and Papa Roach.');
+s(2005, '"I Declare War" concert', ['jay','nas'], 'Jay-Z brought Nas out on stage in New Jersey and ended the feud.');
+s(2010, 'The Home & Home Tour', ['jay','em'], 'Stadium shows in Detroit and New York.');
+s(2011, 'Watch the Throne Tour', ['jay','kanye']);
+s(2011, 'Kendrick "crowned" in L.A.', ['kendrick','snoop','dre','game'], 'At an August 2011 show, Snoop, Dre and The Game called Kendrick the new king of the West Coast.');
+s(2012, 'Club Paradise Tour', ['drake','kendrick'], 'Kendrick opened for Drake.');
+s(2014, 'Drake vs. Lil Wayne Tour', ['drake','wayne']);
+s(2021, 'Free Larry Hoover concert', ['kanye','drake'], 'They ended their feud on stage in Los Angeles.');
+s(2022, 'Super Bowl LVI halftime show', ['dre','snoop','em','kendrick','fifty'], 'With Mary J. Blige and Anderson .Paak.');
+
+// Beefs
+b(1991, '"No Vaseline"', [['cube'], ['eazy','ren','dre']], 'Ice Cube\'s diss of his former N.W.A groupmates and their manager, Jerry Heller.');
+b(1992, '"Dre Day" vs. "Real Muthaphuckkin G\'s"', [['dre','snoop'], ['eazy']], 'Dre and Snoop went at Eazy on The Chronic, and Eazy answered in 1993.');
+b(1994, 'Quad Studios shooting and "Hit \'Em Up"', [['tupac'], ['biggie','diddy']], '2Pac blamed Biggie and Puff for his November 1994 shooting. "Hit \'Em Up" (1996) made it the centre of the East–West feud.');
+b(1995, '"New York, New York" vs. "L.A., L.A."', [['dpg','snoop'], ['mobb']], 'Tha Dogg Pound\'s track drew an answer from Capone-N-Noreaga, Mobb Deep and Tragedy Khadafi.');
+b(1996, '"Hit \'Em Up"', [['tupac'], ['kim','mobb']], '2Pac also went after Junior M.A.F.I.A. and Mobb Deep. Mobb Deep answered with "Drop a Gem on \'Em".');
+b(1996, '"Against All Odds"', [['tupac'], ['nas']], '2Pac dissed Nas on the Makaveli album. Nas has said they made peace at the 1996 MTV VMAs, days before 2Pac was shot.');
+b(2001, '"Takeover" vs. "Ether"', [['jay'], ['nas']], 'The most famous back-and-forth on record. It ran until 2005.');
+b(2001, '"Takeover"', [['jay'], ['mobb']], 'Jay-Z\'s verse also went after Prodigy of Mobb Deep.');
+b(2005, 'G-Unit split', [['fifty'], ['game']], '50 Cent threw The Game out of G-Unit on Hot 97, and a shooting outside the station followed.');
+b(2009, '50 Cent vs. Rick Ross', [['fifty'], ['ross']], 'Started in early 2009 and ran for years on records and in court.');
+b(2010, 'Lil\' Kim vs. Nicki Minaj', [['kim'], ['nicki']], 'Kim accused Nicki of copying her style, and shots went back and forth through the 2010s.');
+b(2013, '"Control" to "Not Like Us"', [['kendrick'], ['drake']], 'Kendrick\'s 2013 "Control" verse started a slow rivalry that exploded in 2024.');
+b(2018, 'Kanye vs. Drake', [['kanye'], ['drake']], 'Fell out in 2018 and traded shots until they shared a stage in 2021.');
+b(2024, '"Champagne Moments" vs. "Push Ups"', [['ross'], ['drake']], 'Rick Ross came at Drake during the 2024 Kendrick war.');
+
+const STORIES = [
+  { pair: ['tupac','snoop'], label: '2Pac & Snoop',
+    text: 'Labelmates at Death Row from late 1995, after Suge Knight posted 2Pac\'s bail. They recorded together and shared stages through 1996, until 2Pac was killed in Las Vegas that September.' },
+  { pair: ['tupac','biggie'], label: '2Pac & Biggie',
+    text: 'Friends before they were rivals. 2Pac took the younger Biggie under his wing in 1993 and they recorded together. After 2Pac was shot at Quad Studios in November 1994 he blamed Biggie and Bad Boy, and it became the defining feud of the era. Both were killed within six months of each other.' },
+  { pair: ['jay','nas'], label: 'Jay-Z & Nas',
+    text: 'Marcy vs. Queensbridge. "Takeover" and "Ether" in 2001 made it the most famous battle on wax. They ended it on stage in 2005, and Nas signed to Def Jam under Jay-Z the next year.' },
+  { pair: ['dre','eazy'], label: 'Dre & Eazy-E',
+    text: 'N.W.A cofounders. Dre left Ruthless for Death Row over money and dissed Eazy on The Chronic, and Eazy hit back. They reportedly reconciled shortly before Eazy died in 1995.' },
+  { pair: ['drake','kendrick'], label: 'Drake & Kendrick',
+    text: 'They toured and traded verses in 2011–12. Kendrick\'s 2013 "Control" verse started a slow-burning rivalry that blew up in 2024 with "Not Like Us".' },
+];
+const STORY_BY_KEY = Object.fromEntries(STORIES.map(st => [key(...st.pair), st]));
+
+function key(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
+
+// ---- Build pairs ----
+const BASE = { feature: 2, stage: 1.5, crew: 3 };
+const groupFactor = n => n <= 2 ? 1 : n === 3 ? 0.8 : n === 4 ? 0.65 : 0.5;
+const PAIRS = new Map();
+function addItem(a, b, ev, w) {
+  if (a === b) return;
+  const k = key(a, b);
+  if (!PAIRS.has(k)) { const [x, y] = k.split('|'); PAIRS.set(k, { k, a: x, b: y, items: [] }); }
+  PAIRS.get(k).items.push({ ev, w });
+}
+for (const ev of EVENTS) {
+  if (ev.type === 'beef') {
+    for (const x of ev.sides[0]) for (const y of ev.sides[1]) addItem(x, y, ev, 0);
+  } else if (ev.hub) {
+    for (const y of ev.artists) if (y !== ev.hub) addItem(ev.hub, y, ev, BASE[ev.type] * 0.8);
+  } else {
+    const n = ev.artists.length, g = groupFactor(n);
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) addItem(ev.artists[i], ev.artists[j], ev, BASE[ev.type] * g);
+  }
+}
+const pairList = [...PAIRS.values()];
+
+const state = { types: new Set(['feature','stage','crew','beef']), view: 'overview', id: null, pair: null, hover: null };
+
+function pairScore(p) {
+  let s = 0;
+  for (const it of p.items) if (it.ev.type !== 'beef' && state.types.has(it.ev.type)) s += it.w;
+  return s;
+}
+function pairBeef(p) { return state.types.has('beef') && p.items.some(it => it.ev.type === 'beef'); }
+function counts(p) {
+  const c = { feature: 0, stage: 0, crew: 0, beef: 0 };
+  for (const it of p.items) c[it.ev.type]++;
+  return c;
+}
+function breakdown(p) {
+  const c = counts(p), out = [];
+  if (c.feature && state.types.has('feature')) out.push(c.feature + (c.feature > 1 ? ' tracks' : ' track'));
+  if (c.stage && state.types.has('stage')) out.push(c.stage + (c.stage > 1 ? ' stages' : ' stage'));
+  if (c.crew && state.types.has('crew')) out.push(c.crew > 1 ? c.crew + ' crews' : 'crew');
+  return out.join(' · ');
+}
+const totalScore = {};
+for (const a of ARTISTS) totalScore[a.id] = 0;
+for (const p of pairList) {
+  const s = p.items.reduce((t, it) => t + it.w, 0);
+  totalScore[p.a] += s; totalScore[p.b] += s;
+}
+function neighbors(id) {
+  const set = new Set([id]);
+  for (const p of pairList) {
+    if (p.a !== id && p.b !== id) continue;
+    if (pairScore(p) > 0 || pairBeef(p)) set.add(p.a === id ? p.b : p.a);
+  }
+  return set;
+}
+
+// ---- DOM refs ----
+const svg = d3.select('#svg');
+const graphEl = document.getElementById('graph');
+const tip = document.getElementById('tip');
+const panel = document.getElementById('panel');
+const regionColor = r => `var(${REGIONS[r].v})`;
+
+// Legend
+document.getElementById('legend').innerHTML =
+  Object.values(REGIONS).map(r => `<span><i class="dot" style="background:var(${r.v})"></i>${r.name}</span>`).join('');
+
+// Artist select
+const sel = document.getElementById('artist-select');
+[...ARTISTS].sort((x, y) => x.name.replace(/^The /, '').localeCompare(y.name.replace(/^The /, '')))
+  .forEach(a => { const o = document.createElement('option'); o.value = a.id; o.textContent = a.name; sel.appendChild(o); });
+sel.addEventListener('change', () => { if (sel.value) openArtist(sel.value); else openOverview(); });
+
+// Story buttons
+const storiesEl = document.getElementById('stories');
+STORIES.forEach((st, i) => {
+  const bt = document.createElement('button');
+  bt.className = 'chip story'; bt.id = 'story-' + i; bt.textContent = st.label;
+  bt.addEventListener('click', () => openPair(st.pair[0], st.pair[1]));
+  storiesEl.appendChild(bt);
+});
+
+// Type toggles
+document.querySelectorAll('[data-type]').forEach(bt => {
+  bt.addEventListener('click', () => {
+    const t = bt.dataset.type;
+    if (state.types.has(t)) state.types.delete(t); else state.types.add(t);
+    bt.setAttribute('aria-pressed', state.types.has(t));
+    updateEdges(); applyHighlight(); renderPanel();
+  });
+});
+
+// ---- Graph ----
+let nodes, gLinks, gBeefs, gHits, gNodes, zoom, zoomLayer, W, H, mobile;
+
+function build() {
+  svg.selectAll('*').remove();
+  W = graphEl.clientWidth;
+  H = svg.node().getBoundingClientRect().height;
+  mobile = W < 640;
+  const k = mobile ? 0.78 : 1;
+  svg.attr('viewBox', `0 0 ${W} ${H}`);
+
+  const rnd = d3.randomLcg(7);
+  nodes = ARTISTS.map(a => {
+    const R = REGIONS[a.region];
+    return { ...a, r: (4.5 + Math.sqrt(totalScore[a.id]) * 1.7) * k,
+      x: R.ax * W + (rnd() - .5) * 60, y: R.ay * H + (rnd() - .5) * 60 };
+  });
+  const byId = Object.fromEntries(nodes.map(n => [n.id, n]));
+  const simLinks = pairList.filter(p => p.items.some(it => it.ev.type !== 'beef')).map(p => {
+    const sc = Math.min(p.items.reduce((t, it) => t + it.w, 0), 14);
+    return { source: byId[p.a], target: byId[p.b], sc };
+  });
+
+  const sim = d3.forceSimulation(nodes).randomSource(rnd)
+    .force('link', d3.forceLink(simLinks).distance(l => (mobile ? 70 : 105) - l.sc * 2.5).strength(l => 0.05 + l.sc * 0.025))
+    .force('charge', d3.forceManyBody().strength(mobile ? -200 : -420))
+    .force('collide', d3.forceCollide(n => n.r + (mobile ? 14 : 22)).iterations(3))
+    .force('x', d3.forceX(n => REGIONS[n.region].ax * W).strength(0.11))
+    .force('y', d3.forceY(n => REGIONS[n.region].ay * H).strength(0.11))
+    .stop();
+  for (let i = 0; i < 420; i++) sim.tick();
+  // stretch the settled layout to fill the frame (room for the hint above and legend below)
+  const padX = mobile ? 40 : 64, top = 52, bottom = mobile ? 96 : 76;
+  const [x0, x1] = d3.extent(nodes, n => n.x), [y0, y1] = d3.extent(nodes, n => n.y);
+  nodes.forEach(n => {
+    n.x = padX + (n.x - x0) / ((x1 - x0) || 1) * (W - 2 * padX);
+    n.y = top + (n.y - y0) / ((y1 - y0) || 1) * (H - top - bottom);
+  });
+
+  zoomLayer = svg.append('g');
+  gLinks = zoomLayer.append('g');
+  gBeefs = zoomLayer.append('g');
+  gHits = zoomLayer.append('g');
+  gNodes = zoomLayer.append('g');
+
+  const pairs = pairList.map(p => ({ p, s: byId[p.a], t: byId[p.b] }));
+
+  gLinks.selectAll('line').data(pairs.filter(d => d.p.items.some(it => it.ev.type !== 'beef')), d => d.p.k)
+    .join('line').attr('class', 'link');
+  gBeefs.selectAll('path').data(pairs.filter(d => d.p.items.some(it => it.ev.type === 'beef')), d => d.p.k)
+    .join('path').attr('class', 'beef');
+  gHits.selectAll('path').data(pairs, d => d.p.k).join('path').attr('class', 'hit')
+    .on('mouseenter', (e, d) => { state.hover = { pair: d.p }; applyHighlight(); showPairTip(e, d.p); })
+    .on('mousemove', (e, d) => showPairTip(e, d.p))
+    .on('mouseleave', () => { state.hover = null; applyHighlight(); hideTip(); })
+    .on('click', (e, d) => { e.stopPropagation(); openPair(d.p.a, d.p.b); });
+
+  const ng = gNodes.selectAll('g').data(nodes, d => d.id).join('g').attr('class', 'node');
+  ng.append('circle').attr('r', d => d.r).attr('fill', d => regionColor(d.region));
+  ng.append('text').text(d => d.label)
+    .attr('text-anchor', 'middle')
+    .attr('dy', d => d.r + (mobile ? 12 : 14))
+    .attr('font-size', d => (mobile ? 10.5 : 12) + Math.min(totalScore[d.id], 60) / (mobile ? 30 : 22));
+  ng.on('mouseenter', (e, d) => { state.hover = { id: d.id }; applyHighlight(); showNodeTip(e, d); })
+    .on('mousemove', (e, d) => showNodeTip(e, d))
+    .on('mouseleave', () => { state.hover = null; applyHighlight(); hideTip(); })
+    .on('click', (e, d) => { e.stopPropagation(); openArtist(d.id); });
+  ng.call(d3.drag()
+    .on('start', (e, d) => { hideTip(); })
+    .on('drag', (e, d) => { d.x = e.x; d.y = e.y; positions(); })
+  );
+
+  svg.on('click', () => { if (state.view !== 'overview') openOverview(); });
+
+  zoom = d3.zoom().scaleExtent([0.6, 5])
+    .filter(e => (e.type !== 'wheel' || e.ctrlKey || e.metaKey) && !e.button)
+    .on('zoom', e => zoomLayer.attr('transform', e.transform));
+  svg.call(zoom).on('dblclick.zoom', null);
+
+  positions(); updateEdges(); applyHighlight();
+}
+
+function positions() {
+  gNodes.selectAll('g.node').attr('transform', d => `translate(${d.x},${d.y})`);
+  gLinks.selectAll('line').attr('x1', d => d.s.x).attr('y1', d => d.s.y).attr('x2', d => d.t.x).attr('y2', d => d.t.y);
+  const curve = (d, bend) => {
+    const mx = (d.s.x + d.t.x) / 2, my = (d.s.y + d.t.y) / 2;
+    const dx = d.t.x - d.s.x, dy = d.t.y - d.s.y, len = Math.hypot(dx, dy) || 1;
+    const off = Math.min(len * 0.18, 34) * bend;
+    return `M${d.s.x},${d.s.y} Q${mx - dy / len * off},${my + dx / len * off} ${d.t.x},${d.t.y}`;
+  };
+  gBeefs.selectAll('path').attr('d', d => curve(d, 1));
+  gHits.selectAll('path').attr('d', d => d.p.items.some(it => it.ev.type !== 'beef') ? curve(d, 0) : curve(d, 1));
+}
+
+function updateEdges() {
+  gLinks.selectAll('line')
+    .attr('stroke-width', d => { const s = pairScore(d.p); return s ? Math.min(1 + s * 0.55, 9) : 0; })
+    .attr('stroke-opacity', d => pairScore(d.p) ? 0.42 : 0)
+    .attr('hidden', d => pairScore(d.p) ? null : '');
+  gBeefs.selectAll('path').attr('hidden', d => pairBeef(d.p) ? null : '');
+  gHits.selectAll('path').attr('hidden', d => (pairScore(d.p) || pairBeef(d.p)) ? null : '');
+}
+
+function applyHighlight() {
+  if (!gNodes) return;
+  let focusNodes = null, focusPair = null;
+  const h = state.hover;
+  if (h && h.id) focusNodes = neighbors(h.id);
+  else if (h && h.pair) { focusNodes = new Set([h.pair.a, h.pair.b]); focusPair = h.pair.k; }
+  else if (state.view === 'artist') focusNodes = neighbors(state.id);
+  else if (state.view === 'pair') { focusNodes = new Set(state.pair); focusPair = key(...state.pair); }
+  const centre = (h && h.id) || (!h && state.view === 'artist' ? state.id : null);
+
+  gNodes.selectAll('g.node')
+    .classed('dim', d => focusNodes && !focusNodes.has(d.id))
+    .classed('sel', d => (state.view === 'artist' && d.id === state.id) || (state.view === 'pair' && state.pair.includes(d.id)));
+  const edgeOn = d => !focusNodes ? true : focusPair ? d.p.k === focusPair : (d.p.a === centre || d.p.b === centre);
+  gLinks.selectAll('line').classed('dim', d => !edgeOn(d)).classed('hot', d => focusNodes && edgeOn(d))
+    .attr('stroke-opacity', d => !pairScore(d.p) ? 0 : (focusNodes && edgeOn(d)) ? 0.85 : 0.42);
+  gBeefs.selectAll('path').classed('dim', d => !edgeOn(d));
+}
+
+// ---- Tooltips ----
+function placeTip(e) {
+  const r = graphEl.getBoundingClientRect();
+  let x = e.clientX - r.left + 14, y = e.clientY - r.top + 14;
+  tip.hidden = false;
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  if (x + tw > r.width - 8) x = e.clientX - r.left - tw - 14;
+  if (y + th > r.height - 8) y = e.clientY - r.top - th - 14;
+  tip.style.left = Math.max(8, x) + 'px'; tip.style.top = Math.max(8, y) + 'px';
+}
+function topTies(id, n) {
+  return pairList.filter(p => (p.a === id || p.b === id) && pairScore(p) > 0)
+    .sort((x, y) => pairScore(y) - pairScore(x)).slice(0, n).map(p => A[p.a === id ? p.b : p.a].label);
+}
+function showNodeTip(e, d) {
+  const ties = topTies(d.id, 3);
+  const beefs = pairList.filter(p => (p.a === d.id || p.b === d.id) && pairBeef(p)).map(p => A[p.a === d.id ? p.b : p.a].label);
+  tip.innerHTML = `<b>${esc(d.name)}</b><br>${REGIONS[d.region].name}` +
+    (ties.length ? `<br>Closest: ${ties.map(esc).join(', ')}` : '') +
+    (beefs.length ? `<br>Beef: ${beefs.map(esc).join(', ')}` : '');
+  placeTip(e);
+}
+function showPairTip(e, p) {
+  const bd = breakdown(p), bf = pairBeef(p);
+  tip.innerHTML = `<b>${esc(A[p.a].label)} × ${esc(A[p.b].label)}</b>` + (bd ? `<br>${bd}` : '') + (bf ? '<br>Had beef' : '') + '<br><span style="opacity:.7">Click for details</span>';
+  placeTip(e);
+}
+function hideTip() { tip.hidden = true; }
+function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch])); }
+
+// ---- Panel ----
+function openOverview() { state.view = 'overview'; state.id = null; state.pair = null; sel.value = ''; renderPanel(); applyHighlight(); }
+function openArtist(id) { state.view = 'artist'; state.id = id; state.pair = null; sel.value = id; renderPanel(); applyHighlight(); panelToView(); }
+function openPair(a, b) { state.view = 'pair'; state.pair = [a, b]; state.id = null; sel.value = ''; renderPanel(); applyHighlight(); panelToView(); }
+function panelToView() {
+  panel.scrollTop = 0;
+  if (window.innerWidth <= 960) {
+    const r = panel.getBoundingClientRect();
+    if (r.top > window.innerHeight * 0.6) panel.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  }
+}
+
+const TAG = { feature: 'feat.', stage: 'stage', crew: 'crew', beef: 'beef' };
+
+function pairRow(p, otherOf, max) {
+  const s = pairScore(p), bf = pairBeef(p);
+  const other = otherOf ? A[p.a === otherOf ? p.b : p.a] : null;
+  const label = other
+    ? `<i class="dot" style="background:${regionColor(other.region)}"></i><span class="n">${esc(other.name)}</span>`
+    : `<span class="n">${esc(A[p.a].label)} × ${esc(A[p.b].label)}</span>`;
+  const meta = [breakdown(p), bf ? '<span class="beefmark">beef</span>' : ''].filter(Boolean).join(' · ');
+  return `<li><button class="row" data-a="${p.a}" data-b="${p.b}">
+    <span class="who">${label}</span><span class="bd">${meta}</span>
+    <span class="bar"><i style="width:${max ? Math.max(3, s / max * 100) : 0}%"></i></span></button></li>`;
+}
+
+function renderPanel() {
+  let html = '';
+  if (state.view === 'overview') {
+    const ranked = pairList.filter(p => pairScore(p) > 0).sort((x, y) => pairScore(y) - pairScore(x));
+    const max = ranked.length ? pairScore(ranked[0]) : 1;
+    const beefs = pairList.filter(pairBeef).sort((x, y) => pairScore(y) - pairScore(x));
+    const frenemies = beefs.filter(p => pairScore(p) > 0);
+    html += `<h2>Strongest ties</h2><p>The pairs that worked together most, by shared crews, features and stages. Pick one, or click any artist on the map.</p>`;
+    html += ranked.length ? `<ul class="rows">${ranked.slice(0, 12).map(p => pairRow(p, null, max)).join('')}</ul>` : '<p>Turn on a relationship type above to see ties.</p>';
+    if (frenemies.length) {
+      html += `<h3>Worked together and feuded</h3><ul class="rows">${frenemies.map(p => pairRow(p, null, max)).join('')}</ul>`;
+    }
+  } else if (state.view === 'artist') {
+    const a = A[state.id];
+    const mine = pairList.filter(p => (p.a === a.id || p.b === a.id) && (pairScore(p) > 0 || pairBeef(p)))
+      .sort((x, y) => pairScore(y) - pairScore(x) || (pairBeef(y) - pairBeef(x)));
+    const max = Math.max(1, ...mine.map(pairScore));
+    const nWork = mine.filter(p => pairScore(p) > 0).length, nBeef = mine.filter(pairBeef).length;
+    html += `<button class="back" id="back">← All ties</button>`;
+    html += `<h2>${esc(a.name)}</h2>`;
+    html += `<div class="meta"><span><i class="dot" style="background:${regionColor(a.region)}"></i> ${REGIONS[a.region].name}</span><span>${nWork} collaborators</span>${nBeef ? `<span style="color:var(--beef)">${nBeef} beef${nBeef > 1 ? 's' : ''}</span>` : ''}</div>`;
+    html += `<p>${esc(a.blurb)}</p>`;
+    html += `<h3>Connections, closest first</h3>`;
+    html += mine.length ? `<ul class="rows">${mine.map(p => pairRow(p, a.id, max)).join('')}</ul>` : '<p>No connections with the current filters.</p>';
+  } else if (state.view === 'pair') {
+    const [x, y] = state.pair, k = key(x, y), p = PAIRS.get(k), story = STORY_BY_KEY[k];
+    html += `<button class="back" id="back">← All ties</button>`;
+    html += `<h2>${esc(A[x].label)}<span class="x">×</span>${esc(A[y].label)}</h2>`;
+    if (story) html += `<p class="story-note">${esc(story.text)}</p>`;
+    if (!p) html += '<p>No recorded connection between these two.</p>';
+    else {
+      const items = p.items.filter(it => state.types.has(it.ev.type)).sort((m, n) => m.ev.year - n.ev.year);
+      const bd = breakdown(p);
+      html += `<div class="meta">${bd ? `<span>${bd}</span>` : ''}${pairBeef(p) ? '<span style="color:var(--beef)">had beef</span>' : ''}</div>`;
+      html += `<h3>Credits &amp; history</h3><ul class="credits">` + items.map(({ ev }) => {
+        const all = ev.type === 'beef' ? [...ev.sides[0], ...ev.sides[1]] : ev.artists;
+        const others = all.filter(id => id !== x && id !== y).map(id => A[id].label);
+        return `<li class="credit"><span class="tag ${ev.type === 'beef' ? 'beef-t' : ''}">${TAG[ev.type]}</span>
+          <div class="t">${esc(ev.title)}<span class="y">${ev.year}</span></div>
+          ${ev.note ? `<div class="note">${esc(ev.note)}</div>` : ''}
+          ${others.length ? `<div class="with">Also ${ev.type === 'beef' ? 'involved' : 'with'}: ${others.map(esc).join(', ')}</div>` : ''}</li>`;
+      }).join('') + `</ul>`;
+      if (!items.length) html += '<p>Nothing to show with the current filters.</p>';
+      html += `<div class="meta"><button class="chip" id="open-a">${esc(A[x].label)}'s ties</button><button class="chip" id="open-b">${esc(A[y].label)}'s ties</button></div>`;
+    }
+  }
+  panel.innerHTML = html;
+  const back = document.getElementById('back'); if (back) back.onclick = openOverview;
+  const oa = document.getElementById('open-a'); if (oa) oa.onclick = () => openArtist(state.pair[0]);
+  const ob = document.getElementById('open-b'); if (ob) ob.onclick = () => openArtist(state.pair[1]);
+  panel.querySelectorAll('.row').forEach(r => {
+    r.onclick = () => openPair(r.dataset.a, r.dataset.b);
+    r.onmouseenter = () => { state.hover = { pair: PAIRS.get(key(r.dataset.a, r.dataset.b)) }; applyHighlight(); };
+    r.onmouseleave = () => { state.hover = null; applyHighlight(); };
+  });
+}
+
+// Zoom buttons
+document.getElementById('zoom-in').onclick = () => svg.transition().duration(200).call(zoom.scaleBy, 1.35);
+document.getElementById('zoom-out').onclick = () => svg.transition().duration(200).call(zoom.scaleBy, 1 / 1.35);
+document.getElementById('zoom-reset').onclick = () => svg.transition().duration(250).call(zoom.transform, d3.zoomIdentity);
+
+build();
+renderPanel();
+
+let lastW = graphEl.clientWidth, rt;
+window.addEventListener('resize', () => {
+  clearTimeout(rt);
+  rt = setTimeout(() => { if (Math.abs(graphEl.clientWidth - lastW) > 40) { lastW = graphEl.clientWidth; build(); } }, 200);
+});
+})();
+</script>

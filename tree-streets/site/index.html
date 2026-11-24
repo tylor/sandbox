@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tree Streets of Vancouver</title>
+<meta name="description" content="Vancouver has about thirty streets named after trees. Do they actually have the tree they are named for?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23fcfcfb'/%3E%3Crect x='14' y='16' width='4' height='12' fill='%23898781'/%3E%3Ccircle cx='16' cy='12' r='9' fill='%23184f95'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<a class="skip-link" href="#leaderboard">Skip to the leaderboard</a>
+
+<header class="masthead">
+  <div class="masthead__lede">
+    <p class="kicker">Vancouver &middot; public street trees</p>
+    <h1>Tree Streets of Vancouver</h1>
+    <p class="standfirst" id="standfirst">Loading&hellip;</p>
+  </div>
+  <dl class="kpis" id="kpis"></dl>
+  <div class="citystrip" id="citystrip"></div>
+</header>
+
+<main class="layout">
+
+  <aside class="rail" id="rail" aria-label="Street rankings and detail">
+
+    <section class="view" id="view-rank">
+      <div class="rail__head">
+        <h2>Does the street have its tree?</h2>
+        <p class="rail__note">
+          In 1887, CPR surveyor Lauchlan Hamilton mapped this run of streets south of
+          False Creek and named them after trees, meaning to keep them alphabetical. In
+          a 1936 letter he told city archivist Major J.S. Matthews he&rsquo;d tried to
+          preserve &ldquo;the arrangement of the alphabet&rdquo; &mdash; Matthews
+          figured Hamilton had handed the list to a draughtsman without saying so, and
+          it landed however it landed. One casualty: the original Cedar Street was
+          renamed Burrard in 1938. Cedar Crescent, tracked below, was named after it in
+          1913 &mdash; and not one of its street trees today is a cedar.
+        </p>
+      </div>
+
+      <p class="board__key">
+        Elizabeth Walker, <em>Street Names of Vancouver</em> (Vancouver Historical
+        Society, 1999), quoting Hamilton&rsquo;s 1936 letter to Matthews.
+        <a href="https://bccd.vpl.ca/pdf/Street_Names_of_Vancouver.pdf"
+           target="_blank" rel="noopener noreferrer">Source&nbsp;&#8599;</a>
+      </p>
+
+      <div class="colkey" aria-hidden="true">
+        <span>Street</span>
+        <span class="num">Count</span>
+        <span class="num">vs city</span>
+      </div>
+
+      <ol class="board" id="leaderboard"></ol>
+
+      <p class="axis-note" id="axisNote"></p>
+    </section>
+
+    <section class="view detail" id="view-detail" hidden>
+      <button type="button" class="back" id="backBtn">&larr;&nbsp; All tree streets</button>
+      <div id="detailBody"></div>
+    </section>
+
+  </aside>
+
+  <div class="mapwrap">
+    <div id="map" role="application" aria-label="Map of Vancouver's tree-named streets"></div>
+
+    <details class="legend" id="legend" open>
+      <summary>How to read the map</summary>
+      <div class="legend__body">
+        <p class="legend__lead">
+          Colour marks whether a street carries its <strong>namesake tree</strong> &mdash;
+          not the street itself.
+        </p>
+        <ul class="legend__scale" id="legendScale"></ul>
+        <ul class="legend__dots">
+          <li><span class="key-dot key-dot--namesake"></span> A tree that matches the street's name</li>
+          <li><span class="key-dot key-dot--other"></span> Any other tree on that street</li>
+        </ul>
+      </div>
+    </details>
+
+    <p class="maphint" id="maphint">Click a street, a tree, or a row in the list.</p>
+  </div>
+
+</main>
+
+<footer class="colophon">
+  <p>
+    Trees from the City of Vancouver&rsquo;s public street-tree inventory &mdash; city-planted
+    trees on public boulevards. Trees on private property aren&rsquo;t counted here, so a
+    street&rsquo;s namesake may grow in more yards than this data can see.
+    Basemap &copy; <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a>
+    contributors, tiles by <a href="https://carto.com/attributions" rel="noopener">CARTO</a>.
+    Species notes and photographs from Wikipedia.
+  </p>
+  <p id="generated"></p>
+</footer>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>

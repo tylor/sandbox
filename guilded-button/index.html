@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Be a Sponsor — Two Buttons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,600..900,50&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold-spec:   #fff9e3;  /* hottest specular point */
+    --gold-bright: #f6d778;  /* lit gold */
+    --gold-mid:    #cf9c3a;  /* body gold */
+    --gold-deep:   #8a5c14;  /* shadowed gold */
+    --gold-shadow: #4a2f08;  /* deepest bronze crease */
+    --ink:         #241503;  /* engraved lettering */
+    --velvet:      #171008;  /* stage one */
+
+    --jazz-teal:    #29c8e0;
+    --jazz-cyan:    #7fe3f0;
+    --jazz-purple:  #4b2a86;
+    --jazz-magenta: #cd2f9a;
+    --jazz-paper:   #fdfdfb;
+    --office:       #e8ecec; /* stage two */
+
+    /* light position, driven by pointer (fractions of button box) */
+    --mx: 30%;
+    --my: 25%;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    font-family: "Fraunces", Georgia, "Times New Roman", serif;
+  }
+
+  .stage {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 2.75rem;
+    padding: 3rem 2rem;
+  }
+
+  .stage--velvet {
+    background:
+      radial-gradient(120% 90% at 50% 12%, #2b1e0e 0%, var(--velvet) 55%, #0c0804 100%);
+  }
+
+  .stage--office {
+    background:
+      radial-gradient(120% 90% at 50% 15%, #ffffff 0%, var(--office) 60%, #d5dcdc 100%);
+  }
+
+  @media (max-width: 760px) {
+    body { grid-template-columns: 1fr; }
+    .stage { min-height: 50vh; }
+  }
+
+  /* ================= gilded brass ================= */
+
+  .gilded {
+    position: relative;
+    display: inline-block;
+    padding: 9px;                      /* width of the outer rim */
+    border-radius: 999px;
+    cursor: pointer;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+
+    /* turned-brass rim: light travels around the edge */
+    background:
+      conic-gradient(from 210deg at var(--mx) var(--my),
+        var(--gold-deep)   0deg,
+        var(--gold-mid)   40deg,
+        var(--gold-spec)  90deg,
+        var(--gold-bright) 130deg,
+        var(--gold-mid)   175deg,
+        var(--gold-shadow) 225deg,
+        /* counter-reflection opposite the light */
+        var(--gold-bright) 275deg,
+        var(--gold-mid)   300deg,
+        var(--gold-shadow) 335deg,
+        var(--gold-deep)  360deg);
+
+    box-shadow:
+      0 30px 60px -18px rgba(0, 0, 0, 0.85),
+      0 12px 24px -8px rgba(0, 0, 0, 0.7),
+      0 0 90px -10px rgba(246, 215, 120, 0.18),
+      inset 0 1.5px 1px rgba(255, 249, 227, 0.9),
+      inset 0 -1.5px 2px rgba(30, 18, 3, 0.8);
+
+    transition: transform 160ms ease, filter 160ms ease;
+  }
+
+  .gilded:active {
+    transform: translateY(2px) scale(0.995);
+    filter: brightness(0.96);
+  }
+
+  .gilded .face {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.15em 2.4em 1.25em;
+    border-radius: 999px;
+    overflow: hidden;
+
+    background:
+      radial-gradient(130% 160% at var(--mx) calc(var(--my) - 20%),
+        rgba(255, 249, 227, 0.95) 0%,
+        rgba(246, 215, 120, 0.6) 22%,
+        rgba(246, 215, 120, 0) 46%),
+      linear-gradient(180deg,
+        var(--gold-bright) 0%,
+        var(--gold-mid) 48%,
+        var(--gold-deep) 88%,
+        var(--gold-shadow) 100%);
+
+    box-shadow:
+      0 0 0 2.5px rgba(48, 30, 5, 0.9),
+      inset 0 2px 3px rgba(255, 249, 227, 0.85),
+      inset 0 10px 18px rgba(255, 244, 200, 0.35),
+      inset 0 -3px 4px rgba(40, 24, 4, 0.65),
+      inset 0 -12px 22px rgba(74, 47, 8, 0.5),
+      inset 0 -2px 6px rgba(255, 214, 130, 0.35);
+  }
+
+  .gilded .face::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      92deg,
+      rgba(255, 246, 214, 0.06) 0px,
+      rgba(255, 246, 214, 0.06) 1px,
+      rgba(74, 47, 8, 0.05) 2px,
+      rgba(74, 47, 8, 0.05) 3px);
+    pointer-events: none;
+  }
+
+  .gilded .face::after {
+    content: "";
+    position: absolute;
+    top: -20%;
+    bottom: -20%;
+    left: -30%;
+    width: 40%;
+    background: linear-gradient(
+      105deg,
+      rgba(255, 252, 235, 0) 0%,
+      rgba(255, 252, 235, 0.55) 45%,
+      rgba(255, 252, 235, 0.9) 50%,
+      rgba(255, 252, 235, 0.55) 55%,
+      rgba(255, 252, 235, 0) 100%);
+    transform: translateX(-160%) skewX(-18deg);
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+
+  .gilded:hover .face::after,
+  .gilded:focus-visible .face::after {
+    animation: glint 900ms cubic-bezier(0.25, 0.6, 0.3, 1) forwards;
+  }
+
+  @keyframes glint {
+    to { transform: translateX(560%) skewX(-18deg); }
+  }
+
+  .gilded .spec {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: radial-gradient(
+      38% 55% at var(--mx) var(--my),
+      rgba(255, 252, 235, 0.5) 0%,
+      rgba(255, 245, 200, 0.15) 45%,
+      rgba(255, 245, 200, 0) 100%);
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+
+  .gilded .label {
+    position: relative;
+    font-size: clamp(1.5rem, 4vw, 2.1rem);
+    font-weight: 780;
+    font-variation-settings: "SOFT" 50, "opsz" 60;
+    letter-spacing: 0.015em;
+    color: var(--ink);
+    text-shadow:
+      0 -1px 1px rgba(20, 10, 0, 0.8),
+      0 1.5px 0.5px rgba(255, 246, 208, 0.7);
+    white-space: nowrap;
+  }
+
+  .gilded:focus-visible {
+    outline: 3px solid var(--gold-bright);
+    outline-offset: 6px;
+  }
+
+  /* ================= jazz cup ================= */
+
+  .jazz {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.2em 2.6em 1.3em;
+    border-radius: 999px;
+    overflow: hidden;
+    cursor: pointer;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+
+    /* waxed paper cup: white with a soft cylindrical roll-off */
+    background:
+      linear-gradient(180deg,
+        #ffffff 0%,
+        var(--jazz-paper) 55%,
+        #eef0ec 88%,
+        #dfe2dc 100%);
+
+    box-shadow:
+      0 18px 35px -12px rgba(75, 42, 134, 0.35),
+      0 6px 14px -6px rgba(0, 40, 60, 0.25),
+      inset 0 2px 2px rgba(255, 255, 255, 1),
+      inset 0 -2px 4px rgba(0, 30, 50, 0.12);
+
+    transition: transform 160ms ease;
+  }
+
+  .jazz:hover { transform: rotate(-1.2deg) scale(1.02); }
+  .jazz:active { transform: rotate(-1.2deg) scale(0.98); }
+
+  .jazz .art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* the squiggle redraws itself on hover */
+  .jazz .scrawl {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+
+  .jazz:hover .scrawl,
+  .jazz:focus-visible .scrawl {
+    animation: scrawl 800ms ease-out;
+  }
+
+  @keyframes scrawl {
+    from { stroke-dashoffset: 1; }
+    to   { stroke-dashoffset: 0; }
+  }
+
+  .jazz .label {
+    position: relative;
+    font-family: "Permanent Marker", "Comic Sans MS", cursive;
+    font-size: clamp(1.4rem, 3.8vw, 1.9rem);
+    color: var(--jazz-purple);
+    transform: rotate(-2deg);
+    white-space: nowrap;
+    /* white halo so the marker sits above the spray */
+    text-shadow:
+      -1px -1px 0 rgba(255,255,255,0.85),
+       1px -1px 0 rgba(255,255,255,0.85),
+      -1px  1px 0 rgba(255,255,255,0.85),
+       1px  1px 0 rgba(255,255,255,0.85),
+       0 0 8px rgba(255,255,255,0.9);
+  }
+
+  .jazz:focus-visible {
+    outline: 3px solid var(--jazz-teal);
+    outline-offset: 6px;
+  }
+
+  /* ================= captions ================= */
+
+  .caption {
+    font-family: Georgia, serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+  }
+
+  .stage--velvet .caption { color: rgba(246, 215, 120, 0.45); }
+  .stage--office .caption { color: rgba(75, 42, 134, 0.55); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gilded .face::after { animation: none !important; }
+    .jazz .scrawl { animation: none !important; }
+    .gilded, .jazz { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage stage--velvet">
+    <a class="gilded" href="#" id="btn">
+      <span class="face">
+        <span class="label">Be a Sponsor</span>
+      </span>
+      <span class="spec"></span>
+    </a>
+    <p class="caption">cast brass &middot; hand polished &middot; est. 2026</p>
+  </div>
+
+  <div class="stage stage--office">
+    <a class="jazz" href="#">
+      <svg class="art" viewBox="0 0 520 160" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <!-- airbrush dissolve: eroded solid core + noise-speckled fringe -->
+          <filter id="spray" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.05 0.09" numOctaves="2" seed="11" result="warp"/>
+            <feDisplacementMap in="SourceGraphic" in2="warp" scale="18" result="rough"/>
+            <feMorphology in="rough" operator="erode" radius="4" result="core"/>
+            <feTurbulence type="fractalNoise" baseFrequency="0.9 1.1" numOctaves="3" seed="4" result="grain"/>
+            <feComponentTransfer in="grain" result="dots">
+              <feFuncA type="discrete" tableValues="0 0 0 1 1"/>
+            </feComponentTransfer>
+            <feComposite in="rough" in2="dots" operator="in" result="speckle"/>
+            <feMerge>
+              <feMergeNode in="speckle"/>
+              <feMergeNode in="core"/>
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- teal spray strokes, sweeping diagonally like the cup -->
+        <g filter="url(#spray)">
+          <path d="M -30 78 L 560 -34 L 560 -6 L -30 106 Z"
+                fill="var(--jazz-cyan)" opacity="0.75"/>
+          <path d="M -30 122 L 560 8 L 560 56 L -30 170 Z"
+                fill="var(--jazz-teal)"/>
+          <path d="M -30 180 L 560 66 L 560 96 L -30 210 Z"
+                fill="var(--jazz-cyan)" opacity="0.85"/>
+        </g>
+
+        <!-- the purple scrawl, dipping under the lettering -->
+        <path class="scrawl" pathLength="1"
+              d="M 18 130 C 80 118, 120 138, 185 124 S 300 96, 365 104 S 470 92, 506 66"
+              fill="none" stroke="var(--jazz-purple)" stroke-width="8" stroke-linecap="round"/>
+        <path class="scrawl" pathLength="1"
+              d="M 30 144 C 100 130, 150 148, 225 132 S 340 110, 405 114 S 482 100, 510 82"
+              fill="none" stroke="var(--jazz-magenta)" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+      </svg>
+      <span class="label">Be a Sponsor</span>
+    </a>
+    <p class="caption">waxed paper &middot; cool refreshment &middot; est. 1992</p>
+  </div>
+
+<script>
+  // The light source follows the cursor so the brass reads as reflective.
+  const btn = document.getElementById("btn");
+  const root = document.documentElement;
+  const fine = matchMedia("(pointer: fine)").matches;
+
+  if (fine) {
+    let raf = null;
+    document.addEventListener("pointermove", (e) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = null;
+        const r = btn.getBoundingClientRect();
+        const x = ((e.clientX - r.left) / r.width) * 100;
+        const y = ((e.clientY - r.top) / r.height) * 100;
+        root.style.setProperty("--mx", Math.max(-40, Math.min(140, x)) + "%");
+        root.style.setProperty("--my", Math.max(-80, Math.min(180, y)) + "%");
+      });
+    });
+  }
+</script>
+</body>
+</html>
