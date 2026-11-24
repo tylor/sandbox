@@ -1,67 +1,69 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-export default function Video360({ src, onVideoReady }) {
-  const videoRef = useRef(null);
-  const textureRef = useRef(null);
-  const materialRef = useRef(null);
+const TWO_PI = Math.PI * 2;
+export const HEADING_SIGN = 1;
 
-  // Create video element and texture once (persist across re-renders)
-  if (!videoRef.current) {
+const reducedMotion = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+export default function Video360({ src, poster, heading, onVideo, onReady }) {
+  const materialRef = useRef(null);
+  const shown = useRef(null); // 'poster' | 'video' for the current src
+  const readyFor = useRef(null);
+
+  const video = useMemo(() => {
     const vid = document.createElement('video');
     vid.crossOrigin = 'anonymous';
     vid.loop = true;
     vid.muted = true;
     vid.playsInline = true;
-    videoRef.current = vid;
-  }
+    vid.preload = 'auto';
+    return vid;
+  }, []);
 
-  if (!textureRef.current) {
-    const tex = new THREE.VideoTexture(videoRef.current);
+  const videoTexture = useMemo(() => {
+    const tex = new THREE.VideoTexture(video);
     tex.minFilter = THREE.LinearFilter;
     tex.magFilter = THREE.LinearFilter;
     tex.colorSpace = THREE.SRGBColorSpace;
-    textureRef.current = tex;
-  }
+    return tex;
+  }, [video]);
 
-  // Update video source when src changes
   useEffect(() => {
-    const video = videoRef.current;
+    if (onVideo) onVideo(video);
+  }, [video, onVideo]);
+
+  useEffect(() => {
+    shown.current = null;
     video.src = src;
     video.load();
-    video.play().catch(() => {});
+    if (!reducedMotion()) video.play().catch(() => {});
+    return () => video.pause();
+  }, [src, video]);
 
-    if (onVideoReady) onVideoReady(video);
-
-    return () => {
-      video.pause();
-    };
-  }, [src]);
-
-  // Keep texture updating each frame
   useFrame(() => {
-    const video = videoRef.current;
-    const texture = textureRef.current;
-    if (video.readyState >= video.HAVE_CURRENT_DATA) {
-      texture.needsUpdate = true;
+    const mat = materialRef.current;
+    if (!mat) return;
+    const hasFrame = video.readyState >= video.HAVE_CURRENT_DATA;
+    const want = hasFrame ? 'video' : 'poster';
+    if (shown.current !== want) {
+      shown.current = want;
+      mat.map = want === 'video' ? videoTexture : poster;
+      mat.needsUpdate = true;
     }
-    // Ensure material knows about the texture
-    if (materialRef.current && materialRef.current.map !== texture) {
-      materialRef.current.map = texture;
-      materialRef.current.needsUpdate = true;
+    if (readyFor.current !== src) {
+      readyFor.current = src;
+      if (onReady) onReady();
     }
   });
 
   return (
-    <mesh scale={[-1, 1, 1]}>
+    <mesh scale={[-1, 1, 1]} rotation-y={HEADING_SIGN * (heading - 0.75) * TWO_PI}>
       <sphereGeometry args={[500, 64, 32]} />
-      <meshBasicMaterial
-        ref={materialRef}
-        map={textureRef.current}
-        side={THREE.BackSide}
-        toneMapped={false}
-      />
+      <meshBasicMaterial ref={materialRef} side={THREE.BackSide} toneMapped={false} />
     </mesh>
   );
 }
