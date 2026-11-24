@@ -1072,17 +1072,27 @@
     map.setPaintProperty('trees-other', 'circle-color', cssVar('--muted'));
     map.setPaintProperty('trees-namesake', 'circle-color', matchColor());
     map.setPaintProperty('trees-namesake', 'circle-stroke-color', cssVar('--surface'));
-    var src = map.getSource('basemap');
-    if (src && typeof src.setTiles === 'function') src.setTiles(basemapTiles());
+    // Swap the basemap style, carrying our own sources and layers (already
+    // repainted above) across -- setStyle would otherwise drop them.
+    map.setStyle(basemapStyle(), {
+      transformStyle: function (prev, next) {
+        if (!prev) return next;
+        var sources = Object.assign({}, next.sources);
+        OWN_SOURCES.forEach(function (id) { if (prev.sources[id]) sources[id] = prev.sources[id]; });
+        var own = prev.layers.filter(function (l) { return OWN_SOURCES.indexOf(l.source) !== -1; });
+        return Object.assign({}, next, { sources: sources, layers: next.layers.concat(own) });
+      }
+    });
   }
 
-  function basemapTiles() {
+  // OpenFreeMap: free, keyless vector tiles (OpenMapTiles schema). Positron
+  // is the same cartography CARTO's light_all raster was drawn from (CARTO's
+  // keyless rasters now only return an "API key required" tile).
+  var OWN_SOURCES = ['streets', 'trees'];
+
+  function basemapStyle() {
     var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    var style = dark ? 'dark_all' : 'light_all';
-    var r = window.devicePixelRatio > 1.25 ? '@2x' : '';
-    return ['a', 'b', 'c', 'd'].map(function (s) {
-      return 'https://' + s + '.basemaps.cartocdn.com/' + style + '/{z}/{x}/{y}' + r + '.png';
-    });
+    return 'https://tiles.openfreemap.org/styles/' + (dark ? 'dark' : 'positron');
   }
 
   function initMap() {
@@ -1098,21 +1108,7 @@
     map = new maplibregl.Map({
       container: 'map',
       attributionControl: false,
-      style: {
-        version: 8,
-        sources: {
-          basemap: {
-            type: 'raster',
-            tiles: basemapTiles(),
-            tileSize: 256,
-            maxzoom: 19,
-            attribution:
-              '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors ' +
-              '© <a href="https://carto.com/attributions">CARTO</a>'
-          }
-        },
-        layers: [{ id: 'basemap', type: 'raster', source: 'basemap' }]
-      },
+      style: basemapStyle(),
       center: VANCOUVER.center,
       zoom: VANCOUVER.zoom,
       minZoom: 9,
