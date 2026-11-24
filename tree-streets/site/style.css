@@ -1,0 +1,843 @@
+/* ==========================================================================
+   Tree Streets of Vancouver
+   Tokens follow the dataviz reference palette (blue, status red, chrome &
+   ink). Colour on the map/charts is BINARY: does the street carry its
+   namesake tree, or none at all -- never street identity.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* chrome & ink */
+  --plane:      #f9f9f7;
+  --surface:    #fcfcfb;
+  --ink:        #0b0b0b;
+  --ink-2:      #52514e;
+  --muted:      #898781;
+  --rule:       #e1e0d9;
+  --line:       #c3c2b7;
+  --border:     rgba(11, 11, 11, 0.10);
+  --wash:       rgba(11, 11, 11, 0.04);
+  --band:       rgba(11, 11, 11, 0.14);
+
+  /* binary scale: has its namesake tree (blue) vs none of it (red) */
+  --c-has:  #2a78d6;   /* blue 450 -- has its namesake */
+  --c-none: #d03b3b;   /* critical -- none of its namesake */
+
+  --shadow: 0 1px 2px rgba(11,11,11,.05), 0 8px 24px -12px rgba(11,11,11,.18);
+  --rail-w: 392px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --plane:      #0d0d0d;
+    --surface:    #1a1a19;
+    --ink:        #ffffff;
+    --ink-2:      #c3c2b7;
+    --muted:      #898781;
+    --rule:       #2c2c2a;
+    --line:       #383835;
+    --border:     rgba(255, 255, 255, 0.10);
+    --wash:       rgba(255, 255, 255, 0.06);
+    --band:       rgba(255, 255, 255, 0.15);
+
+    --c-has:  #3987e5;   /* has its namesake */
+    --c-none: #e66767;   /* none of its namesake */
+
+    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px -12px rgba(0,0,0,.8);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--plane);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+a { color: inherit; }
+
+.skip-link {
+  position: absolute; left: -9999px; top: 0; z-index: 100;
+  background: var(--surface); padding: 10px 14px; border: 1px solid var(--border);
+}
+.skip-link:focus { left: 8px; top: 8px; }
+
+:focus-visible {
+  outline: 2px solid var(--c-has);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* ---------- masthead ------------------------------------------------------ */
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px 40px;
+  padding: 22px 28px 20px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.masthead__lede { max-width: 62ch; }
+
+.kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(26px, 3.1vw, 38px);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}
+
+.standfirst {
+  margin: 10px 0 0;
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 68ch;
+}
+.standfirst strong { color: var(--ink); font-weight: 650; }
+.standfirst .mark { white-space: nowrap; }
+.standfirst .swatch { width: 16px; margin-right: 5px; }
+
+.kpis {
+  display: flex;
+  gap: 30px;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+}
+.kpis > div { min-width: 0; }
+.kpis dt {
+  font-size: 11px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.kpis dd {
+  margin: 2px 0 0;
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* citywide context: a quiet footnote row spanning the full masthead width,
+   below the headline stats. .masthead is already flex-wrap, so a 100%-basis
+   child drops onto its own line for free -- same move .mapwrap/.colophon
+   already use elsewhere for "supplementary, not primary" rows. */
+.citystrip {
+  flex: 1 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px 28px;
+  margin-top: 4px;
+  padding-top: 11px;
+  border-top: 1px solid var(--rule);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.citystrip[hidden] { display: none; }
+.citystrip__lead { flex: none; margin: 0; color: var(--ink-2); }
+.citystrip__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.citystrip__list li { white-space: nowrap; }
+.citystrip__label {
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.citystrip__n {
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+/* ---------- layout -------------------------------------------------------- */
+
+.layout {
+  display: grid;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  min-height: 0;
+}
+
+.rail {
+  border-right: 1px solid var(--rule);
+  background: var(--surface);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+
+.rail__head { padding: 20px 20px 12px; }
+.rail__head h2 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.015em;
+  font-weight: 650;
+}
+.rail__note {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+/* ---------- leaderboard --------------------------------------------------- */
+
+.colkey {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 44px 56px;
+  gap: 0 8px;
+  padding: 8px 20px 7px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.colkey .num { text-align: right; }
+
+.board { list-style: none; margin: 0; padding: 0; }
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 44px 56px;
+  gap: 2px 8px;
+  width: 100%;
+  padding: 8px 20px 9px;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  border-left: 3px solid transparent;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.row:hover { background: var(--wash); }
+.row.is-selected { background: var(--wash); border-left-color: var(--row-c, var(--line)); }
+
+.row__name {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.row__sub {
+  grid-column: 1;
+  font-size: 11.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.row__share, .row__ratio {
+  font-size: 13px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  align-self: start;
+}
+.row__share { color: var(--ink-2); }
+.row__ratio { font-weight: 650; color: var(--ink); }
+.row__ratio.is-weak { font-weight: 500; color: var(--muted); }
+.row__ratio.is-null { color: var(--muted); font-weight: 500; }
+
+.row__plot { grid-column: 1 / -1; margin-top: 8px; }
+
+/* the chance plot: pale band = what luck allows, tick = citywide rate,
+   dot = what is there */
+.plot {
+  position: relative;
+  height: 12px;
+  margin-right: 3px;
+}
+.plot::before {                       /* the 0 -> max track */
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 1px;
+  background: var(--rule);
+  transform: translateY(-50%);
+}
+.plot__band {
+  position: absolute;
+  top: 50%;
+  height: 8px;
+  min-width: 2px;
+  transform: translateY(-50%);
+  border-radius: 4px;
+  background: var(--band);
+}
+.plot__tick {
+  position: absolute;
+  top: 50%;
+  width: 1px;
+  height: 12px;
+  margin-left: -0.5px;
+  transform: translateY(-50%);
+  background: var(--muted);
+}
+.plot__dot {
+  position: absolute;
+  top: 50%;
+  width: 9px; height: 9px;
+  margin-left: -4.5px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  background: var(--dc, var(--muted));
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.plot__dot.is-zero {
+  background: var(--surface);
+  box-shadow: 0 0 0 2px var(--surface), inset 0 0 0 2.5px var(--dc, var(--c-none));
+}
+.plot--big { height: 18px; }
+.plot--big .plot__band { height: 12px; border-radius: 6px; }
+.plot--big .plot__tick { height: 18px; }
+.plot--big .plot__dot { width: 12px; height: 12px; margin-left: -6px; }
+.plot--big .plot__dot.is-zero { box-shadow: 0 0 0 2px var(--surface), inset 0 0 0 3px var(--dc, var(--c-none)); }
+
+.board__key {
+  margin: 0 20px 14px;
+  padding-left: 11px;
+  border-left: 2px solid var(--rule);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.key-band {
+  display: inline-block;
+  width: 18px; height: 7px;
+  border-radius: 3.5px;
+  background: var(--band);
+  vertical-align: middle;
+}
+.key-tick {
+  display: inline-block;
+  width: 1px; height: 10px;
+  background: var(--muted);
+  vertical-align: middle;
+  margin: 0 3px;
+}
+.key-dot--plot { background: var(--c-has); }
+
+.axis-note {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 20px 22px;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.axis-note__key { display: inline-flex; align-items: center; gap: 4px; }
+
+/* ---------- detail view --------------------------------------------------- */
+
+.detail { padding: 16px 20px 40px; }
+
+.back {
+  border: 0;
+  background: none;
+  padding: 4px 6px 4px 0;
+  margin: 0 0 14px -2px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+.back:hover { color: var(--ink); }
+
+.detail__kicker {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.detail__title {
+  margin: 5px 0 0;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+.hero {
+  margin: 14px 0 0;
+  font-size: 62px;
+  line-height: .95;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  color: var(--hero-c, var(--ink));
+}
+.hero-sub {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  letter-spacing: .02em;
+  color: var(--muted);
+}
+.headline {
+  margin: 14px 0 0;
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.headline strong { font-weight: 650; }
+
+.evidence {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--plane);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.evidence b { color: var(--ink); font-weight: 650; }
+.evidence__icon {
+  flex: none;
+  width: 16px; height: 16px;
+  margin-top: 1px;
+  border-radius: 50%;
+  border: 1.5px solid var(--muted);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 13px;
+  text-align: center;
+}
+.evidence--strong { border-color: var(--line); background: var(--surface); }
+.evidence--strong .evidence__icon { border-color: var(--ink-2); color: var(--ink-2); }
+.evidence--slight, .evidence--none { border-style: dashed; }
+
+.method {
+  margin: 10px 0 0;
+  padding-left: 11px;
+  border-left: 2px solid var(--rule);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.method b { color: var(--ink-2); font-weight: 650; }
+
+.block { margin-top: 26px; }
+.block__title {
+  margin: 0 0 3px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.block__note {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.block__aside {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-left: 2px solid var(--rule);
+  background: var(--wash);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.block__aside strong { color: var(--ink); font-weight: 650; }
+
+.compare__legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--ink-2);
+  flex-wrap: wrap;
+}
+.compare__legend span.v {
+  font-weight: 650;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.compare__legend .key-dot { margin-right: 6px; }
+
+/* species bars */
+.sp { margin-bottom: 11px; }
+.sp__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12.5px;
+}
+.sp__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-2);
+}
+.sp.is-namesake .sp__name { color: var(--ink); font-weight: 650; }
+.sp__n {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+.sp.is-namesake .sp__n { color: var(--ink); font-weight: 650; }
+.sp__track { margin-top: 4px; height: 8px; }
+.sp__bar {
+  height: 8px;
+  min-width: 2px;
+  background: var(--muted);
+  opacity: .55;
+  border-radius: 0 4px 4px 0;
+}
+.sp.is-namesake .sp__bar { opacity: 1; }
+.sp.is-namesake .sp__bar { background: var(--sp-c, var(--c-has)); }
+.sp__tag {
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* taxon card */
+.taxon {
+  margin-top: 26px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--plane);
+}
+.taxon__img {
+  display: block;
+  width: 100%;
+  height: 168px;
+  object-fit: cover;
+  background: var(--wash);
+}
+.taxon__inner { padding: 14px 15px 16px; }
+.taxon__name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.taxon__sci {
+  margin: 1px 0 0;
+  font-size: 12.5px;
+  font-style: italic;
+  color: var(--muted);
+}
+.taxon__extract {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.taxon__spotlabel {
+  margin: 14px 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.taxon__spot {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.taxon__spot li { margin-bottom: 5px; }
+.taxon__link {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+.taxon__credit {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.empty {
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+/* segment list */
+.segs { margin: 10px 0 0; padding: 0; list-style: none; }
+.segs li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.segs li span:last-child { font-variant-numeric: tabular-nums; color: var(--muted); flex: none; }
+
+/* ---------- map ----------------------------------------------------------- */
+
+.mapwrap { position: relative; min-height: 0; }
+#map { position: absolute; inset: 0; background: var(--plane); }
+
+.legend {
+  position: absolute;
+  left: 14px;
+  bottom: 26px;
+  z-index: 5;
+  width: 268px;
+  max-width: calc(100% - 28px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  font-size: 12px;
+}
+.legend > summary {
+  padding: 9px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  cursor: pointer;
+  list-style: none;
+}
+.legend > summary::-webkit-details-marker { display: none; }
+.legend > summary::after { content: " +"; color: var(--muted); }
+.legend[open] > summary { border-bottom: 1px solid var(--rule); }
+.legend[open] > summary::after { content: " –"; }
+.legend__body { padding: 11px 12px 13px; }
+.legend__lead { margin: 0 0 10px; font-size: 11.5px; line-height: 1.45; color: var(--ink-2); }
+.legend__scale, .legend__dots { list-style: none; margin: 0; padding: 0; }
+.legend__scale li,
+.legend__dots li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--ink-2);
+}
+.legend__dots { margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--rule); }
+
+.swatch {
+  display: inline-block;
+  flex: none;
+  width: 22px; height: 4px;
+  border-radius: 2px;
+  background: var(--muted);
+  vertical-align: middle;
+}
+.key-dot {
+  display: inline-block;
+  flex: none;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.key-dot--namesake { width: 11px; height: 11px; background: var(--c-has); box-shadow: 0 0 0 1.5px var(--surface); }
+.key-dot--other { width: 6px; height: 6px; background: var(--muted); opacity: .6; }
+
+.maphint {
+  position: absolute;
+  left: 14px;
+  top: 12px;
+  z-index: 5;
+  margin: 0;
+  padding: 7px 11px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  font-size: 11.5px;
+  color: var(--ink-2);
+  transition: opacity .3s;
+}
+.maphint[hidden] { display: none; }
+
+/* MapLibre chrome, retinted */
+.maplibregl-ctrl-attrib.maplibregl-compact,
+.maplibregl-ctrl-group {
+  background: var(--surface) !important;
+  color: var(--ink-2);
+}
+.maplibregl-ctrl-attrib a { color: var(--ink-2); }
+/* Uses currentColor, so it follows --ink-2 in both themes and needs none of the
+   invert() the sprite-based MapLibre icons above require. */
+/* `.maplibregl-ctrl-group button` (0,1,1) sets display:block and outranks a bare
+   class, so the selector has to carry the element too or the icon sits left. */
+.maplibregl-ctrl-group button.ctrl-reset {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-2);
+}
+.maplibregl-ctrl-group button.ctrl-reset svg { width: 16px; height: 16px; display: block; }
+.maplibregl-ctrl-group button.ctrl-reset:hover { color: var(--ink); }
+.maplibregl-popup-content {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 12px 14px 13px;
+  font-family: inherit;
+}
+.maplibregl-popup-tip { display: none; }
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+    filter: invert(1);
+  }
+  :root:where(:not([data-theme="light"])) .maplibregl-ctrl-group button + button {
+    border-top-color: var(--line);
+  }
+}
+.maplibregl-popup-close-button { color: var(--muted); font-size: 17px; padding: 2px 7px; }
+
+.pop__badge {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--surface);
+  background: var(--pop-c, var(--c-has));
+}
+.pop__badge--other {
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--line);
+}
+.pop__name { margin: 0; font-size: 14.5px; font-weight: 650; letter-spacing: -0.01em; }
+.pop__sci { margin: 1px 0 0; font-size: 12px; font-style: italic; color: var(--muted); }
+.pop__facts { margin: 9px 0 0; display: grid; grid-template-columns: auto auto; gap: 3px 14px; font-size: 12px; }
+.pop__facts dt { color: var(--muted); }
+.pop__facts dd { margin: 0; font-variant-numeric: tabular-nums; }
+.pop__street { margin: 9px 0 0; padding-top: 8px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--ink-2); }
+.pop__sv {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+.pop__sv:hover { color: var(--c-has); }
+
+/* ---------- colophon ------------------------------------------------------ */
+
+.colophon {
+  padding: 12px 28px 14px;
+  border-top: 1px solid var(--rule);
+  background: var(--surface);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.colophon p { margin: 0; max-width: 92ch; }
+
+/* ---------- narrow -------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  html, body { height: auto; }
+  body { display: block; }
+  .masthead { padding: 16px 18px 14px; }
+  .kpis { gap: 22px; }
+  .kpis dd { font-size: 21px; }
+  /* map first: on a narrow window the reader must not have to scroll past the
+     whole leaderboard to find it */
+  .layout { display: flex; flex-direction: column; }
+  .mapwrap { order: -1; height: 56vh; min-height: 320px; }
+  #map { position: absolute; inset: 0; }
+  .rail {
+    border-right: 0;
+    border-top: 1px solid var(--rule);
+    overflow: visible;
+    max-height: none;
+  }
+  .legend { width: 236px; bottom: 26px; }
+  .legend__lead { display: none; }
+  .citystrip { display: none; }
+  .maphint { font-size: 11px; padding: 6px 10px; }
+  .colophon { padding: 12px 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

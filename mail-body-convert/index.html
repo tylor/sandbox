@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<head>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+	<style>
+	textarea {
+		width: 100%;
+	}
+	.jumbotron {
+		padding: 0;
+	}
+	</style>
+</head>
+<body>
+	<div class="container" ng-app="myApp" ng-controller="Example">
+		<div class="jumbotron">
+			<div class="container">
+				<h2>Decode raw e-mail data</h2>
+				<p>If you have some <strong>raw</strong> email content, you need to decode it. Either using <code>Base64 decode</code> or another mail format which has escaped some HTML characters.
+					<br />Click on the links so see example of raw and base64 encoded content copied from two e-mails of mine.</p>
+			</div>
+		</div>
+		<div class="container">
+			<div class="row">
+				<div class="col-md-6">
+					<h2><a href="#" class="raw">Raw e-mail</a> (<a href="#" class="base64">Base 64 encoded</a>)</h2>
+					<textarea rows="10" class="btoa"></textarea>
+				</div>
+				<div class="col-md-6">
+					<h2>Base 64 decoded (raw text)</h2>
+					<textarea readonly cols="30" rows="10" class="atob"></textarea>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
+					<h2>HTML Preview</h2>
+					<div class="preview"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<script>
+	var $btoa = $(".btoa"),
+	$atob = $(".atob"),
+	$preview = $(".preview");
+	function decode() {
+	// alert($btoa.val().replace(/[\r\n\n]/g, ""))
+		var val, raw;
+		try {
+			raw = $btoa.val();
+		val = window.atob(raw.replace(/\n/g, ""));
+		} catch(e) {
+			try {
+				val = raw.replace(/=(..)/g, function(v) { return String.fromCharCode(parseInt(v.replace("=",""), 16)) });
+				val = val.replace(/=\n/g, "")
+			} catch(ee) {
+				val = ee.message;      
+			}
+
+		}
+		$atob.val(val);
+		$preview.html(val);
+	}
+	function encode() {
+		$btoa.val(window.btoa($atob.val()));
+	}
+	decode();
+	$btoa.on("change keyup", decode);
+
+	$(".raw").on("click", function() {
+		$btoa.val(raw);
+		decode();
+	});
+	$(".base64").on("click", function() {
+		$btoa.val(base64);
+		decode();
+	})
+	</script>
+</body>

@@ -1,3 +1,13 @@
 .DS_Store
 **/.DS_Store
-culth-impact-report/screenshots/
+node_modules/
+__pycache__/
+
+# Local-only / secrets
+blessed-buy/.bb-cookie
+
+# Working files, not needed on the site
+cultch-impact-report/screenshots/
+# 70 MB raw input for tree-streets/build/build.py (City of Vancouver open data
+# "public-trees" export). The site only needs tree-streets/site/data/.
+tree-streets/public-trees.geojson

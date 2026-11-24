@@ -4,7 +4,7 @@
   "private": true,
   "source": "src/index.html",
   "scripts": {
-    "start": "parcel src/index.html",
+    "start": "parcel src/index.html --dist-dir .parcel-dev",
     "build": "parcel build src/index.html --public-url ./"
   },
   "staticFiles": {

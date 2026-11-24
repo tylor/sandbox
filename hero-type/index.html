@@ -1,0 +1,1405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#e0e6e6">
+<title>Denim &amp; Steel (typed headline mockup)</title>
+<link rel="preload" as="image" href="https://denimandsteel.com/wp-content/uploads/2019/06/Homepage-Background-Copy.webp">
+<link rel="preconnect" href="https://use.typekit.net" crossorigin>
+<link rel="stylesheet" href="https://use.typekit.net/umd4dtq.css">
+<!-- site.css is a copy of the live site's stylesheet. Everything the mockup adds is in the <style> below. -->
+<link rel="stylesheet" href="site.css">
+<style>
+/* ------------------------------------------------------------------
+   Mockup additions: the typed headline, its strip, and the bench.
+   Colours and type come from the site: slate, mist, orange, sofia-pro.
+------------------------------------------------------------------ */
+:root {
+  --ds-slate: #394a58;
+  --ds-mist: #e0e6e6;
+  --ds-orange: #ea730e;
+  --ds-ink: #414141;
+  --ds-cyan: #00a1c7;
+  --ds-topo: url("https://denimandsteel.com/wp-content/uploads/2019/06/Homepage-Background-Copy.webp");
+}
+.intro { background-size: cover; background-image: var(--ds-topo); }
+
+/* The live hero has a fixed height. The typed one needs room for the strip and credit. */
+.results.intro { height: auto; min-height: max(460px, calc(80vh - 128px)); }
+@media screen and (min-width: 920px) { .results.intro { height: auto; min-height: 80vh; } }
+
+/* ---------- Typed headline ---------- */
+/* No layout shift: the column keeps the width it has on the live site, and invisible copies
+   of every take's text hold the height open. The typed text is laid over them. */
+.results.intro .result > div { width: 100%; max-width: 900px; }
+.headline__box { display: block; position: relative; isolation: isolate; min-height: 1.125em; }
+.headline__sizers { display: grid; visibility: hidden; }
+.headline__sizers > span { grid-area: 1 / 1; white-space: pre-wrap; }
+.headline__live { position: absolute; left: 0; top: 0; width: 100%; }
+.headline__text { white-space: pre-wrap; }
+/* Keeps the first line box real while nothing is typed, so the caret has a line to sit on. */
+.headline__text::before { content: ""; display: inline-block; }
+
+.caret {
+  position: absolute; left: 0; top: 0;
+  width: max(2px, .05em); margin-left: .03em;
+  background: var(--ds-orange);
+  pointer-events: none;
+}
+.caret.is-idle { animation: tt-blink 1.1s steps(1, end) infinite; }
+@keyframes tt-blink { 50% { opacity: 0; } }
+.sels { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.sel { position: absolute; background: rgb(0 161 199 / .45); }
+
+/* ---------- Strip and credit under the headline ---------- */
+.take-meta { max-width: 900px; padding: 0 20px; color: var(--ds-mist); }
+@media screen and (min-width: 769px) and (max-width: 1480px) { .take-meta { padding: 0 30px; } }
+@media screen and (max-width: 480px) { .take-meta { padding-left: 0; } }
+.take-meta__row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 32px; margin-top: 4px; }
+.take-meta > * { max-width: 690px; }
+.results.intro .take-meta__row p { width: auto; margin: 0; font-size: 1rem; line-height: 1.35; opacity: .9; }
+.take-meta__row strong { font-weight: 600; }
+.take-meta__controls { display: flex; gap: 20px; }
+
+.tt-link {
+  font: inherit; font-size: .9375rem; line-height: 1.35; color: inherit;
+  padding: 0; border: 0; background: none; cursor: pointer;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em;
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+  transition: color .2s ease, text-decoration-color .2s ease;
+}
+.tt-link:hover { text-decoration-color: var(--ds-orange); }
+.results.intro .tt-link:hover { color: #fff; }
+.bench .tt-link:hover { color: var(--ds-orange); }
+.results.intro .tt-link:focus-visible, .results.intro .strip:focus-visible { outline: 2px solid var(--ds-orange); outline-offset: 3px; }
+.bench .tt-link:focus-visible { outline: 2px solid var(--ds-slate); outline-offset: 2px; }
+
+.strip { display: block; width: 100%; height: 60px; overflow: visible; color: var(--ds-mist); }
+.strip--mini { height: 18px; }
+.strip--live { cursor: col-resize; touch-action: pan-y; border-radius: 2px; }
+.strip line, .strip path { stroke: currentColor; stroke-width: 1; fill: none; shape-rendering: crispEdges; }
+.strip .slash, .strip .break { shape-rendering: auto; }
+.strip .rule { opacity: .5; }
+.strip .tick, .strip .slash, .strip .break { opacity: .28; }
+.strip .tick--del, .strip .strike, .strip .playhead { stroke: var(--ds-orange); }
+.strip .tick--del, .strip .playhead { stroke-width: 1.5; }
+.strip text { font-family: sofia-pro, sans-serif; font-size: 12px; fill: currentColor; font-variant-numeric: tabular-nums; }
+.strip .redline { fill: var(--ds-orange); }
+.strip .redline, .strip .strike { opacity: 0; }
+.strip .is-on { opacity: 1; }
+
+/* ---------- The bench (sits where Snapshots is on the live site) ---------- */
+.bench__body { display: flex; flex-direction: column; gap: 72px; margin: 40px 0 80px; }
+.bench h3 { margin-bottom: 1.25rem; color: var(--ds-slate); }
+
+.options { display: grid; gap: 14px; }
+.option { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.option__label { width: 8.5em; font-size: 1rem; }
+.option label { position: relative; }
+.option label span {
+  display: inline-block; padding: 8px 12px;
+  border: 2px solid var(--ds-slate); border-radius: 5px;
+  color: var(--ds-slate); font-size: 1rem; font-weight: 600; line-height: 1.15;
+  cursor: pointer; transition: background-color .2s ease, color .2s ease;
+}
+.option input:checked + span { background: var(--ds-slate); color: #fbf8f4; }
+.option input:focus-visible + span { outline: 2px solid var(--ds-slate); outline-offset: 2px; }
+.playback__note { margin: 14px 0 18px; font-size: 1rem; max-width: 34em; }
+.headline { scroll-margin-top: 84px; }
+
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; max-width: 600px; }
+.fields label { display: grid; gap: 2px; font-size: .9375rem; }
+.fields input {
+  font: inherit; font-size: 1.125rem; color: var(--ds-slate);
+  padding: 6px 0; border: 0; border-bottom: 2px solid var(--ds-slate); border-radius: 0; background: none;
+}
+.fields input:focus-visible { outline: 2px solid var(--ds-slate); outline-offset: 4px; }
+
+.pad {
+  padding: 30px 30px 10px;
+  border-radius: 20px;
+  background: var(--ds-slate) var(--ds-topo) center / cover;
+  box-shadow: 0 1px 2px rgba(41, 47, 51, .06), 0 8px 20px -8px rgba(41, 47, 51, .22), 0 28px 56px -20px rgba(41, 47, 51, .3);
+  color: var(--ds-mist);
+}
+.pad textarea {
+  display: block; width: 100%; resize: none;
+  font: inherit; font-size: clamp(1.5rem, 3.4vw, 2.25rem); font-weight: 600; line-height: 1.125;
+  color: var(--ds-mist); caret-color: var(--ds-orange);
+  padding: 0; border: 0; background: none; outline: none;
+}
+.pad textarea::placeholder { color: rgb(224 230 230 / .6); opacity: 1; }
+.pad:focus-within { outline: 2px solid var(--ds-orange); outline-offset: 3px; }
+.recorder__stats { margin: 18px 0 14px; font-size: 1rem; font-variant-numeric: tabular-nums; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px; }
+.bench button.button { font-size: 1rem; }
+.bench button.button:disabled { opacity: .4; cursor: default; pointer-events: none; }
+.bench button.button:focus-visible { outline: 2px solid var(--ds-slate); outline-offset: 2px; }
+
+.takes { margin: 0 0 28px; padding: 0; list-style: none; }
+.library__hint { margin: -.5rem 0 1.25rem; font-size: 1rem; }
+.take {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px;
+  position: relative; padding: 22px 0 24px;
+  background: #fff; border-top: 1px solid rgb(57 74 88 / .2);
+}
+.take > * { grid-column: 2; }
+.take > .take__grip {
+  grid-column: 1; grid-row: 1 / span 4; align-self: start;
+  display: grid; place-items: center;
+  width: 32px; height: 36px; margin: -5px 0 0 -8px; padding: 0;
+  border: 0; border-radius: 6px; background: none;
+  color: var(--ds-slate); opacity: .5;
+  cursor: grab; touch-action: none;
+  transition: opacity .2s ease, background-color .2s ease;
+}
+.take__grip svg { fill: currentColor; }
+.take__grip:hover, .take__grip:focus-visible, .take.is-dragging .take__grip { opacity: 1; background: rgb(57 74 88 / .1); }
+.take__grip:focus-visible { outline: 2px solid var(--ds-slate); outline-offset: 2px; }
+/* The row being dragged lifts off the page; the white spread gives it a margin without moving its content. */
+.take.is-dragging {
+  z-index: 2; border-radius: 10px; border-color: transparent;
+  box-shadow: 0 0 0 12px #fff, 0 10px 24px 6px rgba(41, 47, 51, .2), 0 28px 56px -8px rgba(41, 47, 51, .28);
+}
+.is-sorting, .is-sorting * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
+.take.is-dragging + .take { border-top-color: transparent; }
+.take:last-child { border-bottom: 1px solid rgb(57 74 88 / .2); }
+.bench [hidden] { display: none !important; }
+.bench .take p { margin-bottom: 0; }
+.take__text { font-size: 1.375rem; font-weight: 600; line-height: 1.2; color: var(--ds-slate); }
+.take[aria-current="true"] .take__text::after { content: " (playing above)"; color: var(--ds-orange); font-size: .9375rem; font-weight: 400; white-space: nowrap; }
+.bench .take .take__meta { margin: 6px 0 10px; font-size: .9375rem; font-variant-numeric: tabular-nums; }
+.take .strip { color: var(--ds-slate); }
+.take__actions { display: flex; gap: 22px; margin-top: 8px; }
+.takes__empty { padding: 22px 0; border-top: 1px solid rgb(57 74 88 / .2); }
+.status { min-height: 1.35em; margin-top: 16px; font-size: 1rem; }
+.status.is-error { color: #b3261e; }
+
+@media screen and (max-width: 480px) {
+  .fields { grid-template-columns: 1fr; }
+  .pad { padding: 22px 20px 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .caret.is-idle { animation: none; }
+}
+</style>
+</head>
+<body>
+<div id="root"><div class="app showing-nav isPointerDevice">
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="sidebar"><a class="logo desktop" href="https://denimandsteel.com/">Denim &amp; Steel</a><div class="sidebar-nav"><nav class="nav"><span class="nav-indicator" aria-hidden="true"></span><ul><li class=""><a class="link" href="https://denimandsteel.com/about/"><span class="nav-label">About</span></a></li><li class=""><a class="link" href="https://denimandsteel.com/services/"><span class="nav-label">Services</span></a></li><li class=""><a class="link" href="https://denimandsteel.com/work/"><span class="nav-label">Work</span></a></li><li class=""><a class="link" href="https://denimandsteel.com/article/"><span class="nav-label">Journal</span></a></li><li class="nav-contact"><button class="button">Contact</button></li></ul></nav><div class="sidebar-search"><a class="logo mobile" href="https://denimandsteel.com/">Denim &amp; Steel</a><div class="input-cover"><input id="search-input" aria-label="Search" class="search-input" autocomplete="off" autocorrect="off" autocapitalize="off" type="search" spellcheck="false" value=""></div></div></div><div class="contactInfo"><p class="has-xx-small-font-size contactInfo-detail"><span class="small-logo"></span><span><strong style="font-weight: bold;">Denim &amp; Steel Interactive</strong><br>Est. 2011</span></p><p class="has-xx-small-font-size">4643 Main Street<br>Vancouver, BC V5V 3R6<br><button type="button" class="acknowledgement">We live &amp; work on stolen land</button></p><p class="contactInfo-actions"><a class="has-xx-small-font-size button" href="mailto:hello@denimandsteel.com">hello@denimandsteel.com</a><a href="https://denim-steelinteractive.eo.page/subscribe" target="_blank" rel="noreferrer" class="has-xx-small-font-size contactInfo-newsletter">Subscribe to our Newsletter<span class="external-arrow" aria-hidden="true">↗</span><span class="visually-hidden"> (opens in a new tab)</span></a></p></div></div>
+<main class="rightPane" id="main">
+
+<div class="results intro" id="hero"><span class="intro-bg" aria-hidden="true"></span><div><div class="result is-choreographed"><div>
+<h2 class="headline" aria-label="We create inspiring online experiences that just feel good."><span class="headline__box" id="headline"><span class="headline__sizers" aria-hidden="true"><span>We create inspiring online experiences that just feel good.</span></span><span class="headline__live"><span class="headline__text" aria-hidden="true">We create inspiring online experiences that just feel good.</span></span></span></h2>
+<!-- Strip, credit and playback controls. Hidden for now; remove the hidden attribute to bring them back. -->
+<div class="take-meta" hidden>
+  <svg class="strip strip--live" id="strip" role="slider" tabindex="0" aria-label="Playback position" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"></svg>
+  <div class="take-meta__row">
+    <p id="credit">Typed by someone who works here.</p>
+    <div class="take-meta__controls">
+      <button class="tt-link" id="replay" type="button">Play again</button>
+      <button class="tt-link" id="next" type="button">Next person</button>
+      <button class="tt-link" id="sound" type="button">Sound off</button>
+    </div>
+  </div>
+</div>
+<div class="serving">
+<h3 style="--delay: 700ms;">Currently serving:</h3>
+<div class="clients"><a href="https://rbcm.ca" style="--delay: 820ms;"><img loading="lazy" decoding="async" class="alignnone size-medium wp-image-4048" title="Royal BC Museum" src="https://denimandsteel.com/wp-content/uploads/2026/01/rbcm-logo-white.svg" alt="Royal BC Museum" width="300" height="132"></a><a href="https://www.cpaws.org" style="--delay: 875ms;"><img loading="lazy" decoding="async" width="1143" height="301" class="alignnone size-medium wp-image-4090" title="Canadian Parks and Wilderness Society logo" src="https://denimandsteel.com/wp-content/uploads/2019/01/cpaws-logo-white.svg" alt="Canadian Parks and Wilderness Society logo"></a><a href="https://www.scienceworld.ca" style="--delay: 930ms;"><img decoding="async" class="alignnone size-full wp-image-2756" title="Science World" src="https://denimandsteel.com/wp-content/uploads/2025/01/client-science-world.png" alt="Science World"></a><a href="https://bpl.bc.ca" style="--delay: 985ms;"><img loading="lazy" decoding="async" width="100" height="100" class="alignnone size-full wp-image-2752" title="Burnaby Public Library" src="https://denimandsteel.com/wp-content/uploads/2025/01/client-bpl.png" alt="Burnaby Public Library"></a><a href="https://moa.ubc.ca" style="--delay: 1040ms;"><img loading="lazy" decoding="async" width="100" height="100" class="alignnone size-full wp-image-2757" title="Museum of Anthropology at UBC" src="https://denimandsteel.com/wp-content/uploads/2025/01/client-moa.png" alt="Museum of Anthropology at UBC"></a><a href="https://pushfestival.ca" style="--delay: 1095ms;"><img loading="lazy" decoding="async" width="100" height="100" class="alignnone size-full wp-image-2759" src="https://denimandsteel.com/wp-content/uploads/2025/01/client-push.png?2" alt="PuSh Festival"></a><a href="https://uwbc.ca" style="--delay: 1150ms;"><img decoding="async" class="alignnone size-full wp-image-2759" title="United Way BC" src="https://denimandsteel.com/wp-content/uploads/2025/01/client-uwbc.png" alt="United Way BC"></a><a href="https://www.ecuad.ca" style="--delay: 1205ms;"><img loading="lazy" decoding="async" width="100" height="100" class="alignnone size-full wp-image-2753" title="Emily Carr University" src="https://denimandsteel.com/wp-content/uploads/2025/01/client-ecu.png" alt="Emily Carr University"></a></div>
+</div>
+</div></div></div></div>
+
+<div class="results snapshots bench" id="bench"><div class="inner">
+  <div class="heading-wrap"><div>
+    <h2 class="header-large">The bench</h2>
+    <p><strong>Record a take, keep the good ones, and they play in the headline above</strong></p>
+  </div></div>
+
+  <div class="bench__body">
+    <section class="playback" aria-labelledby="playback-title">
+      <h3 id="playback-title">Playback</h3>
+      <div class="options">
+        <div class="option" role="radiogroup" aria-labelledby="rate-label">
+          <span class="option__label" id="rate-label">Speed</span>
+          <label><input class="visually-hidden" type="radio" name="rate" value="1"><span>1× as typed</span></label>
+          <label><input class="visually-hidden" type="radio" name="rate" value="1.25"><span>1.25×</span></label>
+          <label><input class="visually-hidden" type="radio" name="rate" value="1.5"><span>1.5×</span></label>
+          <label><input class="visually-hidden" type="radio" name="rate" value="2"><span>2×</span></label>
+          <label><input class="visually-hidden" type="radio" name="rate" value="3"><span>3×</span></label>
+        </div>
+        <div class="option" role="radiogroup" aria-labelledby="gap-label">
+          <span class="option__label" id="gap-label">Longest pause</span>
+          <label><input class="visually-hidden" type="radio" name="maxGap" value="3000"><span>3 s</span></label>
+          <label><input class="visually-hidden" type="radio" name="maxGap" value="1000"><span>1 s</span></label>
+          <label><input class="visually-hidden" type="radio" name="maxGap" value="500"><span>0.5 s</span></label>
+        </div>
+      </div>
+      <p class="playback__note">Speed scales every gap between keys. Longest pause only trims the waits, before the speed is applied.</p>
+      <div class="controls">
+        <button class="button" id="benchReplay" type="button">Play again</button>
+      </div>
+    </section>
+
+    <section class="recorder" aria-labelledby="recorder-title">
+      <h3 id="recorder-title">Record a take</h3>
+      <div class="fields">
+        <label>Name <input id="recBy" type="text" autocomplete="name"></label>
+        <label>Role <input id="recRole" type="text" autocomplete="organization-title"></label>
+      </div>
+      <div class="pad">
+        <label class="visually-hidden" for="recText">Your line</label>
+        <textarea id="recText" rows="3" maxlength="120" spellcheck="false" autocomplete="off" placeholder="Type your line here. The clock starts on your first key."></textarea>
+        <svg class="strip" id="recStrip" aria-hidden="true"></svg>
+      </div>
+      <p class="recorder__stats" id="recStats">Typos and second thoughts are kept. That's the point.</p>
+      <div class="controls">
+        <button class="button" id="recPreview" type="button" disabled>Play it in the headline</button>
+        <button class="button" id="recKeep" type="button" disabled>Keep this take</button>
+        <button class="button" id="recReset" type="button" disabled>Start over</button>
+      </div>
+    </section>
+
+    <section class="library" aria-labelledby="library-title">
+      <h3 id="library-title">Takes</h3>
+      <p class="library__hint">Takes play from the top down. Drag a handle to reorder, or focus it and use the arrow keys.</p>
+      <ol class="takes" id="takeList"></ol>
+      <div class="controls">
+        <button class="button" id="download" type="button">Download takes.json</button>
+        <button class="button" id="importBtn" type="button">Import a file</button>
+        <button class="button" id="restore" type="button" hidden>Restore samples</button>
+        <input class="visually-hidden" id="importFile" type="file" accept="application/json,.json" tabindex="-1" aria-hidden="true">
+      </div>
+      <p class="status" id="status" role="status"></p>
+    </section>
+  </div>
+</div></div>
+
+</main>
+</div></div>
+
+<!-- The takes this page ships with. Same shape as the takes.json the bench downloads. -->
+<script type="application/json" id="takes">
+[
+  {
+    "v": 1,
+    "id": "sample-1",
+    "by": "Sample",
+    "role": "",
+    "recorded": "2026-11-11T09:12:04-08:00",
+    "text": "We create inspiring online experiences that just feel good.",
+    "ms": 12398,
+    "sample": true,
+    "events": [
+      [0,0,0,"W",181], [159,1,0,"e",119], [280,2,0," ",97], [486,3,0,"m",120],
+      [571,4,0,"a",59], [666,5,0,"k",97], [757,6,0,"e",101], [1757,3,7],
+      [1894,3,4,"c",117], [2081,4,0,"r",95], [2262,5,0,"e",135], [2475,6,0,"a",86],
+      [2695,7,0,"t",114], [2818,8,0,"e",149], [2934,9,0," ",84], [3108,10,0,"i",123],
+      [3223,11,0,"n",86], [3339,12,0,"s",155], [3690,13,0,"p",75],
+      [3785,14,0,"i",149], [3885,15,0,"r",140], [3988,16,0,"i",122],
+      [4140,17,0,"n",80], [4255,18,0,"g",81], [4355,19,0," ",65], [4704,20,0,"o",77],
+      [4878,21,0,"n",85], [5027,22,0,"l",148], [5216,23,0,"i",49],
+      [5402,24,0,"n",99], [5550,25,0,"e",64], [5649,26,0," ",96], [5850,27,0,"e",96],
+      [6086,28,0,"x",117], [6302,29,0,"p",119], [6502,30,0,"e",100],
+      [6603,31,0,"r",93], [6699,32,0,"i",126], [6781,33,0,"e",113],
+      [6894,34,0,"n",79], [6977,35,0,"c",76], [7369,36,0,"e",103],
+      [7542,37,0,"s",128], [8556,38,0," ",45], [8821,39,0,"t",108],
+      [8933,40,0,"h",71], [9081,41,0,"a",89], [9167,42,0,"t",98], [9301,43,0," ",67],
+      [9469,44,0,"j",63], [9583,45,0,"u",91], [10067,46,0,"s",79],
+      [10201,47,0,"t",184], [10297,48,0," ",52], [10525,49,0,"f",108],
+      [10759,50,0,"e",73], [10856,51,0,"e",119], [10958,52,0,"l",82],
+      [11176,53,0," ",57], [11960,54,0,"g",131], [12047,55,0,"o",71],
+      [12143,56,0,"o",127], [12298,57,0,"d",74], [12398,58,0,".",87]
+    ]
+  },
+  {
+    "v": 1,
+    "id": "sample-2",
+    "by": "Sample",
+    "role": "",
+    "recorded": "2026-11-11T09:14:40-08:00",
+    "text": "We create inspiring online experiences that just feel good.",
+    "ms": 7300,
+    "sample": true,
+    "events": [
+      [0,0,0,"W",143], [128,1,0,"e",45], [232,2,0," ",91], [375,3,0,"c",95],
+      [499,4,0,"r",88], [611,5,0,"e",53], [700,6,0,"a",72], [767,7,0,"t",81],
+      [810,8,0,"e",77], [852,9,0," ",44], [971,10,0,"i",99], [1045,11,0,"n",65],
+      [1114,12,0,"s",56], [1157,13,0,"p",107], [1370,14,0,"i",65],
+      [1412,15,0,"r",101], [1519,16,0,"i",70], [1610,17,0,"g",77],
+      [1652,18,0,"n",80], [1882,18,1,"",95], [1996,17,1,"",97], [2135,17,0,"n",91],
+      [2189,18,0,"g",85], [2281,19,0," ",56], [2364,20,0,"o",69], [2456,21,0,"n",59],
+      [2577,22,0,"l",43], [2677,23,0,"i",78], [2743,24,0,"n",52], [2785,25,0,"e",79],
+      [2831,26,0," ",73], [2919,27,0,"e",56], [3057,28,0,"x",86], [3125,29,0,"p",68],
+      [3168,30,0,"e",42], [3285,31,0,"r",73], [3425,32,0,"e",62],
+      [3492,33,0,"i",109], [3606,34,0,"n",81], [3660,35,0,"c",57],
+      [3744,36,0,"e",68], [3838,37,0,"s",72], [4218,37,37], [4304,36,36],
+      [4424,35,35], [4546,34,34], [4726,33,1,"",98], [4808,32,1,"",76],
+      [4921,32,0,"i",58], [5014,33,0,"e",54], [5174,35,35], [5280,36,36],
+      [5399,37,37], [5479,38,38], [5523,38,0," ",88], [5594,39,0,"t",63],
+      [5647,40,0,"h",82], [5689,41,0,"a",49], [5752,42,0,"t",62], [5822,43,0," ",56],
+      [5948,44,0,"j",53], [6017,45,0,"u",49], [6333,46,0,"s",76], [6407,47,0,"t",56],
+      [6456,48,0," ",42], [6586,49,0,"f",90], [6678,50,0,"e",79],
+      [6727,51,0,"e",113], [6773,52,0,"l",78], [6871,53,0," ",38],
+      [7006,54,0,"g",53], [7056,55,0,"o",127], [7127,56,0,"o",51],
+      [7233,57,0,"d",98], [7300,58,0,".",65]
+    ]
+  },
+  {
+    "v": 1,
+    "id": "sample-3",
+    "by": "Sample",
+    "role": "",
+    "recorded": "2026-11-11T09:21:19-08:00",
+    "text": "Elevating online experiences for mission-driven organizations.",
+    "ms": 10958,
+    "sample": true,
+    "events": [
+      [0,0,0,"E",104], [103,1,0,"l",97], [252,2,0,"e",115], [328,3,0,"v",101],
+      [478,4,0,"a",101], [586,5,0,"t",108], [700,6,0,"i",125], [830,7,0,"n",97],
+      [1017,8,0,"g",115], [1134,9,0," ",62], [1331,10,0,"o",56], [1531,11,0,"n",105],
+      [1687,12,0,"l",106], [1775,13,0,"i",67], [1873,14,0,"n",163],
+      [1954,15,0,"e",61], [2049,16,0," ",70], [2217,17,0,"e",114],
+      [2558,18,0,"x",86], [2617,19,0,"p",67], [2700,20,0,"e",127],
+      [2812,21,0,"r",121], [2993,22,0,"i",100], [3108,23,0,"e",63],
+      [3240,24,0,"n",87], [3379,25,0,"c",88], [3489,26,0,"e",108],
+      [3738,27,0,"s",99], [3865,28,0," ",49], [4050,29,0,"f",112],
+      [4150,30,0,"o",107], [4295,31,0,"r",149], [4449,32,0," ",84],
+      [4624,33,0,"o",128], [4728,34,0,"r",76], [4977,35,0,"g",67],
+      [5132,36,0,"a",132], [5205,37,0,"n",93], [5311,38,0,"i",90],
+      [5470,39,0,"z",142], [5656,40,0,"a",78], [6188,41,0,"t",58],
+      [6305,42,0,"i",75], [6447,43,0,"o",92], [6621,44,0,"n",78], [6719,45,0,"s",84],
+      [6805,46,0,".",134], [8555,33,33], [8712,33,0,"m",101], [8859,34,0,"i",110],
+      [8942,35,0,"s",86], [9021,36,0,"s",87], [9103,37,0,"i",73], [9309,38,0,"o",71],
+      [9450,39,0,"n",79], [9607,40,0,"-",87], [9852,41,0,"d",135],
+      [9953,42,0,"r",91], [10031,43,0,"i",75], [10151,44,0,"v",94],
+      [10250,45,0,"e",110], [10869,46,0,"n",120], [10958,47,0," ",69]
+    ]
+  }
+]
+</script>
+
+<script>
+(() => {
+'use strict';
+
+/* ==================================================================
+   Helpers
+================================================================== */
+const $ = (sel, root = document) => root.querySelector(sel);
+const SVG = 'http://www.w3.org/2000/svg';
+const h = (tag, props = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) k === 'class' ? (n.className = v) : n.setAttribute(k, v);
+  n.append(...kids);
+  return n;
+};
+const s = (tag, attrs = {}) => {
+  const n = document.createElementNS(SVG, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+};
+const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const chars = (str) => Array.from(str);
+const secs = (ms) => (ms >= 9950 ? Math.round(ms / 1000) : (ms / 1000).toFixed(1)) + ' s';
+const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ==================================================================
+   1. The take format
+
+   {
+     "v": 1,
+     "id": "tylor-sherman-mwd2nohp",
+     "by": "Tylor Sherman",
+     "role": "partner",
+     "recorded": "2026-11-11T09:12:04-08:00",
+     "text": "We create inspiring online experiences that just feel good.",
+     "ms": 9120,
+     "events": [[t, at, del, ins, hold?], [t, anchor, focus], ...]
+   }
+
+   Events come in two shapes, both starting with t, the milliseconds since
+   the first key:
+     [t, at, del, ins, hold?]  an edit: at position `at`, remove `del` characters
+                               and insert `ins`. `hold` is how long the key was
+                               down, when known. The caret ends up after `ins`.
+     [t, anchor, focus]        the caret moved, or text was selected, without an
+                               edit. A plain caret has anchor equal to focus.
+   Positions count Unicode code points.
+================================================================== */
+const PAUSE_MIN = 650;  // a gap this long is drawn as a pause
+/* How the hero plays takes. Both are set from the bench. */
+const playback = {
+  rate: 1.5,      // 1 is the speed it was typed at
+  maxGap: 1000,   // pauses longer than this many ms are shortened to it
+};
+
+const isMove = (event) => event.length === 3;
+
+function replay(events) {
+  const cells = [];
+  for (const e of events) if (!isMove(e)) cells.splice(e[1], e[2], ...chars(e[3]));
+  return cells.join('');
+}
+
+function makeId(by) {
+  const slug = String(by || 'take').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'take';
+  return `${slug}-${Date.now().toString(36)}`;
+}
+
+/* Checks a take and returns a clean copy. Throws with a readable reason. */
+function validateTake(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('That is not a take.');
+  if (raw.v !== 1) throw new Error('This take uses a version the page does not know.');
+  if (!Array.isArray(raw.events) || !raw.events.length) throw new Error('This take has no edits in it.');
+  let last = 0, len = 0;
+  const inText = (n) => Number.isInteger(n) && n >= 0 && n <= len;
+  const events = raw.events.map((e) => {
+    if (!Array.isArray(e) || e.length < 3) throw new Error('An event is missing fields.');
+    const t = e[0];
+    if (!Number.isFinite(t) || t < last) throw new Error('The event times run backwards.');
+    last = t;
+    if (isMove(e)) {
+      if (!inText(e[1]) || !inText(e[2])) throw new Error('A caret move points outside the text.');
+      return [t, e[1], e[2]];
+    }
+    const [, at, del, ins, hold] = e;
+    if (!inText(at) || !Number.isInteger(del) || del < 0 || at + del > len || typeof ins !== 'string') {
+      throw new Error('An edit points outside the text.');
+    }
+    len += chars(ins).length - del;
+    return Number.isFinite(hold) ? [t, at, del, ins, hold] : [t, at, del, ins];
+  });
+  if (events.every(isMove)) throw new Error('This take has no edits in it.');
+  const text = replay(events);
+  if (typeof raw.text === 'string' && raw.text !== text) throw new Error('The edits do not add up to the stored text.');
+  if (!text.trim()) throw new Error('This take ends with nothing typed.');
+  const take = {
+    v: 1,
+    id: String(raw.id || makeId(raw.by)),
+    by: String(raw.by || 'Someone').slice(0, 80),
+    role: String(raw.role || '').slice(0, 80),
+    recorded: typeof raw.recorded === 'string' ? raw.recorded : null,
+    text,
+    ms: last,
+  };
+  if (raw.sample) take.sample = true;
+  take.events = events;
+  return take;
+}
+
+/* Turns a take into what playback and the strip need: ticks on a playback
+   clock (long pauses shortened), the pauses, and the runs of deleted text. */
+function analyse(take) {
+  const ticks = [], pauses = [], redlines = [], cells = [];
+  let shift = 0, prevRaw = 0, run = null, longest = '', keys = 0;
+  take.events.forEach((e, i) => {
+    const raw = e[0], gap = raw - prevRaw, cap = playback.maxGap;
+    if (i && gap > cap) shift += gap - cap;
+    const t = raw - shift;
+    if (i && gap >= PAUSE_MIN) pauses.push({ t0: t - Math.min(gap, cap), t1: t, real: gap, cut: gap > cap });
+    prevRaw = raw;
+    if (isMove(e)) { ticks.push({ t, sel: [e[1], e[2]] }); return; }
+
+    const [, at, del, ins, hold] = e;
+    if (del) {
+      const gone = cells.slice(at, at + del).join('');
+      const continues = run && t - run.t1 < 700 && (at + del === run.at || at === run.at);
+      if (continues) {
+        run.text = at + del === run.at ? gone + run.text : run.text + gone;
+        run.at = at; run.t1 = t;
+      } else {
+        run = { t0: t, t1: t, at, text: gone };
+        redlines.push(run);
+      }
+    }
+    if (ins) run = null;
+    cells.splice(at, del, ...chars(ins));
+    if (cells.length > chars(longest).length) longest = cells.join('');
+    ticks.push({ t, at, del, ins, hold });
+    keys++;
+  });
+  return {
+    ticks, pauses, redlines, keys,
+    ms: ticks.length ? ticks[ticks.length - 1].t : 0,
+    corrections: redlines.length,
+    text: cells.join(''),
+    longest,
+  };
+}
+
+function formatTake(take, pad = '') {
+  const lines = Object.entries(take)
+    .filter(([k]) => k !== 'events')
+    .map(([k, v]) => `${pad}  ${JSON.stringify(k)}: ${JSON.stringify(v)},`);
+  const rows = [];
+  let row = '';
+  for (const e of take.events) {
+    const item = JSON.stringify(e);
+    if (row && row.length + item.length + 2 > 78) { rows.push(row); row = ''; }
+    row += (row ? ', ' : '') + item;
+  }
+  if (row) rows.push(row);
+  return `${pad}{\n${lines.join('\n')}\n${pad}  "events": [\n${rows.map((r) => `${pad}    ${r}`).join(',\n')}\n${pad}  ]\n${pad}}`;
+}
+const formatTakes = (list) => `[\n${list.map((t) => formatTake(t, '  ')).join(',\n')}\n]\n`;
+
+/* ==================================================================
+   2. Recorder: turns what happens in a textarea into events
+================================================================== */
+class Recorder {
+  constructor(field) {
+    this.field = field;
+    this.onChange = null;
+    field.addEventListener('keydown', (e) => this._down(e));
+    field.addEventListener('keyup', (e) => this._up(e));
+    field.addEventListener('input', (e) => this._sync(e.timeStamp));
+    // Caret moves and selections. Browsers differ on where they report these, so listen in each place;
+    // repeats are dropped because the selection has not changed.
+    const moved = (e) => { if (document.activeElement === field) this._selection(e.timeStamp); };
+    document.addEventListener('selectionchange', moved);
+    field.addEventListener('selectionchange', moved);
+    field.addEventListener('select', moved);
+    this.reset();
+  }
+
+  reset() {
+    this.events = [];
+    this.prev = [];
+    this.sel = [0, 0];
+    this.t0 = null;
+    this.down = new Map();
+    this.lastDown = null;
+    this.field.value = '';
+  }
+
+  get text() { return this.field.value; }
+
+  _down(e) {
+    if (e.key === 'Enter') { e.preventDefault(); return; }
+    if (e.repeat || e.isComposing || !e.code || e.key === 'Unidentified') return;
+    this.lastDown = { ts: e.timeStamp, ev: null };
+    this.down.set(e.code, this.lastDown);
+  }
+
+  _up(e) {
+    const press = this.down.get(e.code);
+    if (!press) return;
+    this.down.delete(e.code);
+    if (press.ev) { press.ev[4] = Math.round(e.timeStamp - press.ts); this.onChange?.(); }
+  }
+
+  _time(ts) {
+    const last = this.events[this.events.length - 1];
+    return Math.max(Math.round(ts - this.t0), last ? last[0] : 0);
+  }
+
+  /* Records whatever changed in the text as the smallest edit that explains it, so
+     autocorrect, paste, word-delete and typing over a selection all come through. */
+  _sync(ts) {
+    if (this.field.value.includes('\n')) this.field.value = this.field.value.replace(/\n+/g, ' ');
+    const cur = chars(this.field.value), prev = this.prev;
+    const max = Math.min(cur.length, prev.length);
+    let a = 0;
+    while (a < max && cur[a] === prev[a]) a++;
+    let b = 0;
+    while (b < max - a && cur[cur.length - 1 - b] === prev[prev.length - 1 - b]) b++;
+    const del = prev.length - a - b;
+    const added = cur.slice(a, cur.length - b);
+    this.prev = cur;
+    if (!del && !added.length) return;
+
+    const d = this.lastDown;
+    const press = d && d.ev === null && ts - d.ts < 60 ? d : null;
+    const at = press ? press.ts : ts;
+    if (this.t0 === null) this.t0 = at;
+    const ev = [this._time(at), a, del, added.join('')];
+    this.events.push(ev);
+    if (press) press.ev = ev;
+    this.sel = [a + added.length, a + added.length];   // where an edit leaves the caret
+    this.onChange?.();
+  }
+
+  /* Records the caret or selection when it is somewhere an edit did not put it. */
+  _selection(ts) {
+    if (this.t0 === null) return;   // the clock starts on the first key
+    this._sync(ts);                 // an edit that has not been seen yet goes first
+    const f = this.field;
+    const count = (offset) => chars(f.value.slice(0, offset)).length;
+    const start = count(f.selectionStart), end = count(f.selectionEnd);
+    const [anchor, focus] = f.selectionDirection === 'backward' ? [end, start] : [start, end];
+    if (anchor === this.sel[0] && focus === this.sel[1]) return;
+    this.sel = [anchor, focus];
+    this.events.push([this._time(ts), anchor, focus]);
+    this.onChange?.();
+  }
+
+  toTake(by, role) {
+    const events = this.events.map((e) => e.slice());
+    while (events.length && isMove(events[events.length - 1])) events.pop();   // clicks after the last edit
+    return validateTake({ v: 1, id: makeId(by), by: by || 'Someone', role, recorded: new Date().toISOString(), events });
+  }
+}
+
+/* ==================================================================
+   3. Player: plays a take into the headline, like a text field would show it
+================================================================== */
+const LEAD = 700;    // a beat of blinking caret before the first key
+const TAIL = 4200;   // how long a finished line stays up
+
+class Player {
+  constructor(h1) {
+    this.h1 = h1;
+    this.heading = h1.closest('h1, h2') || h1;
+    this.textEl = $('.headline__text', h1);
+    this.anchor = h('span', { class: 'caret-anchor' });
+    this.sels = h('span', { class: 'sels' });
+    this.caret = h('span', { class: 'caret is-idle', 'aria-hidden': 'true' });
+    h1.prepend(this.sels);
+    h1.append(this.caret);
+    this.cells = [];
+    this.sel = [0, 0];      // [anchor, focus]; equal means a plain caret
+    this.rate = 1;
+    this.time = 0;
+    this.ms = 0;
+    this.state = 'idle';
+    this.token = 0;
+    this.onTime = this.onKey = this.onEnded = null;
+    this._frame = this._frame.bind(this);
+    new ResizeObserver(() => this._render()).observe(h1);
+  }
+
+  load(analysis) {
+    this.pause();
+    this.a = analysis;
+    this.ms = analysis.ms;
+    this.heading.setAttribute('aria-label', analysis.text);
+    this._reset();
+    this.time = -LEAD * this.rate;
+    this.onTime?.(this.time);
+  }
+
+  clear() {
+    this.pause();
+    this.a = null;
+    this.heading.removeAttribute('aria-label');
+    this._reset();
+  }
+
+  play() {
+    if (!this.a || this.state === 'playing' || this.time >= this.ms + TAIL * this.rate) return;
+    this.state = 'playing';
+    this.last = performance.now();
+    this.raf = requestAnimationFrame(this._frame);
+  }
+
+  pause() {
+    cancelAnimationFrame(this.raf);
+    if (this.state === 'playing') this.state = 'paused';
+  }
+
+  seek(t) {
+    if (!this.a) return;
+    t = clamp(t, -LEAD * this.rate, this.ms);
+    if (t < this.time || this.clearing) this._reset();
+    this.time = t;
+    this._catchUp(false);
+    this.onTime?.(this.time);
+  }
+
+  /* Leaves the way a person clears a field: select all, delete. */
+  async clearOut(fast) {
+    const token = ++this.token;
+    this.clearing = true;
+    this.sel = [0, this.cells.length];
+    this._render();
+    await wait(fast ? 170 : 560);
+    if (token !== this.token) return;
+    this.onKey?.({ del: 1, ins: '' });
+    this._reset();
+    await wait(fast ? 150 : 440);
+  }
+
+  _reset() {
+    this.token++;
+    this.clearing = false;
+    this.cells = [];
+    this.sel = [0, 0];
+    this.i = 0;
+    this.textEl.replaceChildren(this.anchor);
+    this._render();
+  }
+
+  _frame(now) {
+    this.time += Math.min(now - this.last, 80) * this.rate;
+    this.last = now;
+    this._catchUp(true);
+    this.onTime?.(this.time);
+    if (this.time >= this.ms + TAIL * this.rate) { this.state = 'ended'; this.onEnded?.(); return; }
+    this.raf = requestAnimationFrame(this._frame);
+  }
+
+  _catchUp(live) {
+    const ticks = this.a.ticks;
+    let moved = false;
+    while (this.i < ticks.length && ticks[this.i].t <= this.time) { this._apply(ticks[this.i++], live); moved = true; }
+    if (!moved) return;
+    this._render();
+    // Like a text field: the caret holds steady while there is activity, and blinks once it stops.
+    this.caret.classList.remove('is-idle');
+    clearTimeout(this.idle);
+    this.idle = setTimeout(() => this.caret.classList.add('is-idle'), 500);
+  }
+
+  _apply(tick, live) {
+    if (tick.sel) { this.sel = tick.sel; return; }
+    const { at, del, ins } = tick;
+    if (del) for (const n of this.cells.splice(at, del)) n.remove();
+    const fresh = chars(ins).map((c) => {
+      const span = document.createElement('span');
+      span.className = 'ch';
+      span.textContent = c;
+      return span;
+    });
+    if (fresh.length) {
+      const fragment = document.createDocumentFragment();
+      fragment.append(...fresh);
+      this.textEl.insertBefore(fragment, this.cells[at] || null);
+      this.cells.splice(at, 0, ...fresh);
+    }
+    this.sel = [at + fresh.length, at + fresh.length];
+    if (live) this.onKey?.(tick);
+  }
+
+  /* Draws the caret, or the selection, where the current state says it is. */
+  _render() {
+    const count = this.cells.length;
+    const anchor = Math.min(this.sel[0], count), focus = Math.min(this.sel[1], count);
+    const from = Math.min(anchor, focus), to = Math.max(anchor, focus);
+    this.textEl.insertBefore(this.anchor, this.cells[focus] || null);
+
+    const base = this.h1.getBoundingClientRect();
+    const style = getComputedStyle(this.h1);
+    const size = parseFloat(style.fontSize);
+    const line = parseFloat(style.lineHeight) || size * 1.125;
+
+    this.sels.replaceChildren();
+    if (to > from) {
+      const range = document.createRange();
+      range.setStartBefore(this.cells[from]);
+      range.setEndAfter(this.cells[to - 1]);
+      const rows = [];   // one highlight per line of text
+      for (const r of range.getClientRects()) {
+        if (r.width < 0.5) continue;
+        const mid = r.top + r.height / 2;
+        const row = rows.find((x) => Math.abs(x.mid - mid) < line / 2);
+        if (row) { row.left = Math.min(row.left, r.left); row.right = Math.max(row.right, r.right); }
+        else rows.push({ mid, left: r.left, right: r.right });
+      }
+      for (const row of rows) {
+        const box = h('span', { class: 'sel' });
+        box.style.cssText = `left:${row.left - base.left}px;top:${row.mid - line / 2 - base.top}px;width:${row.right - row.left}px;height:${line}px`;
+        this.sels.append(box);
+      }
+    }
+
+    const r = this.anchor.getBoundingClientRect();
+    const height = size * 0.86;
+    this.caret.style.height = `${height}px`;
+    this.caret.style.transform = `translate(${r.left - base.left}px, ${r.top - base.top + (r.height - height) / 2 + size * 0.02}px)`;
+    this.caret.style.visibility = to > from ? 'hidden' : '';   // a selection hides the caret
+  }
+}
+
+/* ==================================================================
+   4. Strip: a take drawn to scale, like a dimension string
+================================================================== */
+class Strip {
+  constructor(svg, { compact = false, playhead = false } = {}) {
+    this.svg = svg;
+    this.compact = compact;
+    this.playhead = playhead;
+    this.time = Infinity;
+    this.a = null;
+    new ResizeObserver(() => this.draw()).observe(svg);
+  }
+
+  setTake(analysis) { this.a = analysis; this.draw(); }
+
+  clear() { this.a = null; this.marks = null; this.svg.replaceChildren(); }
+
+  timeAt(clientX) {
+    const r = this.svg.getBoundingClientRect();
+    return clamp((clientX - r.left - this.pad) / (r.width - this.pad * 2), 0, 1) * this.span;
+  }
+
+  draw() {
+    const a = this.a, svg = this.svg, c = this.compact;
+    const W = Math.round(svg.getBoundingClientRect().width);
+    if (!a || W < 20) return;
+    const H = c ? 18 : 60, base = c ? 12.5 : 45.5, pad = c ? 1 : 5;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.replaceChildren();
+    this.pad = pad;
+    this.span = Math.max(a.ms, 1);
+    const X = (t) => Math.round(pad + (clamp(t, 0, this.span) / this.span) * (W - pad * 2)) + 0.5;
+    this.X = X;
+    const add = (tag, attrs) => svg.appendChild(s(tag, attrs));
+    this.marks = [];
+    this.counters = [];
+    const mark = (node, t) => { this.marks.push({ node, t }); return node; };
+    const lift = (hold) => (hold ? clamp((hold - 50) / 170, 0, 1) : 0.35);
+
+    add('line', { class: 'rule', x1: pad, x2: W - pad, y1: base, y2: base });
+
+    for (const k of a.ticks) {
+      const x = X(k.t);
+      if (k.sel) {   // a caret move or selection: a small mark under the line
+        if (!c) mark(add('line', { class: 'tick tick--move', x1: x, x2: x, y1: base + 3, y2: base + 7 }), k.t);
+        continue;
+      }
+      if (k.ins || !k.del) {
+        const space = /^\s+$/.test(k.ins);
+        const tall = c ? (space ? 3 : 5 + lift(k.hold) * 6) : (space ? 6 : 12 + lift(k.hold) * 17);
+        mark(add('line', { class: 'tick', x1: x, x2: x, y1: base, y2: base - tall }), k.t);
+      }
+      if (k.del) mark(add('line', { class: 'tick tick--del', x1: x, x2: x, y1: base, y2: base + (c ? 5 : 10) }), k.t);
+    }
+
+    if (!c) {
+      for (const p of a.pauses) {
+        const x0 = X(p.t0), x1 = X(p.t1), mid = (x0 + x1) / 2;
+        mark(add('line', { class: 'slash', x1: x0 - 4, y1: base + 4, x2: x0 + 4, y2: base - 4 }), p.t0);
+        mark(add('line', { class: 'slash', x1: x1 - 4, y1: base + 4, x2: x1 + 4, y2: base - 4 }), p.t1);
+        if (p.cut) mark(add('path', { class: 'break', d: `M${mid - 7} ${base}l3.5 -6l7 12l3.5 -6` }), p.t0);
+        if (x1 - x0 >= 44) {
+          this.counters.push({ node: add('text', { class: 'pause', x: mid, y: base - 9, 'text-anchor': 'middle' }), p, shown: '' });
+        }
+      }
+      let edge = -Infinity;
+      for (const r of a.redlines) {
+        const word = r.text.trim();
+        if (!word) continue;
+        const label = add('text', { class: 'redline', y: 11 });
+        label.textContent = word;
+        const len = label.getComputedTextLength();
+        const x = Math.max(pad, Math.min(X(r.t0) - 1, W - pad - len));
+        if (x < edge + 8) { label.remove(); continue; }
+        label.setAttribute('x', x);
+        edge = x + len;
+        mark(label, r.t0);
+        mark(add('line', { class: 'strike', x1: x - 1, x2: x + len + 1, y1: 7.5, y2: 7.5 }), r.t0);
+      }
+      if (this.playhead) this.head = add('line', { class: 'playhead', y1: 16, y2: H - 1 });
+    }
+    this.setTime(this.time);
+  }
+
+  setTime(t) {
+    this.time = t;
+    if (!this.marks) return;
+    for (const m of this.marks) m.node.classList.toggle('is-on', m.t <= t);
+    for (const k of this.counters) {
+      const { t0, t1, real } = k.p;
+      const label = t >= t1 ? secs(real) : t > t0 ? secs(((t - t0) / (t1 - t0)) * real) : '';
+      if (label !== k.shown) k.node.textContent = k.shown = label;
+    }
+    if (this.playhead && this.head) {
+      const x = this.X(t);
+      this.head.setAttribute('x1', x);
+      this.head.setAttribute('x2', x);
+      this.head.style.visibility = t > 0 && t < this.span ? 'visible' : 'hidden';
+    }
+  }
+}
+
+/* ==================================================================
+   5. Sound: a soft key tick, off until asked for
+================================================================== */
+const Sound = {
+  on: false,
+  ctx: null,
+  toggle() {
+    this.on = !this.on;
+    if (this.on && !this.ctx) {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const len = Math.floor(this.ctx.sampleRate * 0.08);
+      this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+      const data = this.noise.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    }
+    if (this.on) this.ctx.resume();
+    return this.on;
+  },
+  key(kind) {
+    if (!this.on || !this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime;
+    const tone = { key: 2300, space: 1100, del: 1500 }[kind] * (0.88 + Math.random() * 0.24);
+    const level = (kind === 'space' ? 0.2 : 0.14) * (0.8 + Math.random() * 0.4);
+
+    const click = ctx.createBufferSource();
+    click.buffer = this.noise;
+    const band = ctx.createBiquadFilter();
+    band.type = 'bandpass'; band.frequency.value = tone; band.Q.value = 1.4;
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(level, t);
+    env.gain.exponentialRampToValueAtTime(0.0008, t + (kind === 'space' ? 0.06 : 0.035));
+    click.connect(band).connect(env).connect(ctx.destination);
+    click.start(t); click.stop(t + 0.08);
+
+    const thud = ctx.createOscillator();
+    thud.frequency.setValueAtTime(kind === 'space' ? 110 : 150, t);
+    thud.frequency.exponentialRampToValueAtTime(60, t + 0.05);
+    const thudEnv = ctx.createGain();
+    thudEnv.gain.setValueAtTime(level * 0.6, t);
+    thudEnv.gain.exponentialRampToValueAtTime(0.0008, t + 0.06);
+    thud.connect(thudEnv).connect(ctx.destination);
+    thud.start(t); thud.stop(t + 0.07);
+  },
+};
+
+/* ==================================================================
+   6. The page: rotation in the hero, and the bench below it
+================================================================== */
+const STORE = 'hero-type/v1';
+const saved = (() => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } })();
+const keep = (list) => list.flatMap((t) => { try { return [validateTake(t)]; } catch { return []; } });
+
+const samples = keep(JSON.parse($('#takes').textContent));
+let mine = keep(Array.isArray(saved.takes) ? saved.takes : []);
+const hidden = new Set(Array.isArray(saved.hidden) ? saved.hidden : []);
+let order = Array.isArray(saved.order) ? saved.order : [];   // take ids, in playing order
+const RATES = [1, 1.25, 1.5, 2, 3], GAPS = [3000, 1000, 500];
+if (RATES.includes(saved.rate)) playback.rate = saved.rate;
+if (GAPS.includes(saved.maxGap)) playback.maxGap = saved.maxGap;
+const allTakes = () => {
+  const rank = new Map(order.map((id, i) => [id, i]));
+  return [...mine, ...samples.filter((t) => !hidden.has(t.id))]
+    .map((take, i) => [take, rank.has(take.id) ? rank.get(take.id) : order.length + i])
+    .sort((a, b) => a[1] - b[1])
+    .map(([take]) => take);
+};
+const putFirst = (takes) => {
+  const ids = takes.map((t) => t.id);
+  order = [...ids, ...allTakes().map((t) => t.id).filter((id) => !ids.includes(id))];
+};
+const persist = () => {
+  try { localStorage.setItem(STORE, JSON.stringify({ takes: mine, hidden: [...hidden], order, rate: playback.rate, maxGap: playback.maxGap, by: recBy.value, role: recRole.value })); } catch {}
+};
+
+const hero = $('#hero'), credit = $('#credit'), stripEl = $('#strip');
+const recBy = $('#recBy'), recRole = $('#recRole'), recStats = $('#recStats');
+const status = $('#status'), takeList = $('#takeList');
+recBy.value = saved.by || '';
+recRole.value = saved.role || '';
+
+const player = new Player($('#headline'));
+player.rate = playback.rate;
+const heroStrip = new Strip(stripEl, { playhead: true });
+let index = 0, current = null, seq = 0, visible = true, held = false;
+
+/* Holds the headline's space open for the tallest take, so playback never moves the page. */
+const sizers = $('.headline__sizers');
+function reserve() {
+  const list = allTakes();
+  if (current && !list.includes(current)) list.push(current);
+  sizers.replaceChildren(...list.map((take) => h('span', {}, analyse(take).longest)));
+}
+
+function say(message, isError = false) {
+  status.textContent = message;
+  status.classList.toggle('is-error', isError);
+}
+
+function setCredit(take, a) {
+  const count = a.corrections;
+  const tail = count ? `with ${WORDS[count] || count} correction${count === 1 ? '' : 's'}.` : 'without a correction.';
+  const time = `${(a.ms / 1000).toFixed(1)} seconds ${tail}`;
+  if (take.sample) credit.replaceChildren(`A simulated take, ${time}`);
+  else credit.replaceChildren('Typed by ', h('strong', {}, take.by), take.role ? `, ${take.role}, ` : ' ', `in ${time}`);
+}
+
+function setSlider(t) {
+  const now = clamp(t, 0, player.ms || 0) / 1000;
+  stripEl.setAttribute('aria-valuemax', ((player.ms || 0) / 1000).toFixed(1));
+  stripEl.setAttribute('aria-valuenow', now.toFixed(1));
+  stripEl.setAttribute('aria-valuetext', `${now.toFixed(1)} of ${((player.ms || 0) / 1000).toFixed(1)} seconds`);
+}
+
+async function show(target, { clear = 'none', user = false } = {}) {
+  const mySeq = ++seq;
+  player.pause();
+  if (clear !== 'none' && player.cells.length) {
+    await player.clearOut(clear === 'fast');
+    if (mySeq !== seq) return;
+  }
+  const list = allTakes();
+  let take = target;
+  if (typeof target === 'number') {
+    if (!list.length) return showEmpty();
+    index = ((target % list.length) + list.length) % list.length;
+    take = list[index];
+  }
+  current = take;
+  reserve();
+  const a = analyse(take);
+  setCredit(take, a);
+  heroStrip.setTake(a);
+  player.load(a);
+  markCurrent();
+  setSlider(0);
+  if (reducedMotion && !user) { player.seek(a.ms); setSlider(a.ms); return; }
+  if (visible) player.play(); else held = true;
+}
+
+function showEmpty() {
+  current = null;
+  reserve();
+  player.clear();
+  heroStrip.clear();
+  credit.textContent = 'No takes yet. Record one on the bench below.';
+}
+
+function markCurrent() {
+  for (const li of takeList.children) {
+    if (current && li.dataset.id === current.id) li.setAttribute('aria-current', 'true');
+    else li.removeAttribute('aria-current');
+  }
+}
+
+player.onTime = (t) => heroStrip.setTime(t);
+player.onKey = (tick) => Sound.key(tick.del && !tick.ins ? 'del' : /^\s+$/.test(tick.ins) ? 'space' : 'key');
+player.onEnded = () => { setSlider(player.ms); if (!reducedMotion) show(index + 1, { clear: 'slow' }); };
+
+new IntersectionObserver(([entry]) => {
+  visible = entry.isIntersecting;
+  if (!visible && player.state === 'playing') { player.pause(); held = true; }
+  else if (visible && held) { held = false; player.play(); }
+}, { threshold: 0.3 }).observe(hero);
+
+const toHero = () => hero.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
+const replayCurrent = () => show(current && !allTakes().includes(current) ? current : index, { clear: 'fast', user: true });
+
+$('#replay').addEventListener('click', replayCurrent);
+$('#next').addEventListener('click', () => show(index + 1, { clear: 'fast', user: true }));
+$('#sound').addEventListener('click', (e) => {
+  const on = Sound.toggle();
+  e.currentTarget.textContent = on ? 'Sound on' : 'Sound off';
+  if (on) Sound.key('key');
+});
+
+/* Scrubbing: drag along the strip, or use the arrow keys. */
+{
+  let dragging = false;
+  const grab = () => { seq++; held = false; player.pause(); };
+  const scrub = (e) => { player.seek(heroStrip.timeAt(e.clientX)); setSlider(player.time); };
+  stripEl.addEventListener('pointerdown', (e) => {
+    if (!player.a || !heroStrip.span) return;
+    dragging = true;
+    stripEl.setPointerCapture(e.pointerId);
+    grab(); scrub(e);
+  });
+  stripEl.addEventListener('pointermove', (e) => { if (dragging) scrub(e); });
+  const release = () => { if (!dragging) return; dragging = false; player.play(); };
+  stripEl.addEventListener('pointerup', release);
+  stripEl.addEventListener('pointercancel', release);
+  stripEl.addEventListener('keydown', (e) => {
+    if (!player.a) return;
+    const step = { ArrowLeft: -250, ArrowDown: -250, ArrowRight: 250, ArrowUp: 250, PageDown: -1000, PageUp: 1000 }[e.key];
+    if (step || e.key === 'Home' || e.key === 'End') {
+      e.preventDefault(); grab();
+      player.seek(e.key === 'Home' ? 0 : e.key === 'End' ? player.ms : Math.max(player.time, 0) + step);
+      setSlider(player.time);
+    } else if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      if (player.state === 'playing') grab(); else player.play();
+    }
+  });
+}
+
+/* ---------- Recording ---------- */
+const recorder = new Recorder($('#recText'));
+const recStrip = new Strip($('#recStrip'));
+const recButtons = [$('#recPreview'), $('#recKeep'), $('#recReset')];
+const RECORDER_HINT = recStats.textContent;
+
+recorder.onChange = () => {
+  const a = analyse({ events: recorder.events });
+  recStrip.setTake(a);
+  const usable = recorder.text.trim().length > 0;
+  recButtons[0].disabled = recButtons[1].disabled = !usable;
+  recButtons[2].disabled = false;
+  recStats.textContent = `${secs(a.ms)}, ${a.keys} key${a.keys === 1 ? '' : 's'}, ${a.corrections} correction${a.corrections === 1 ? '' : 's'}.`;
+};
+
+function resetRecorder() {
+  recorder.reset();
+  recStrip.clear();
+  recButtons.forEach((b) => (b.disabled = true));
+  recStats.textContent = RECORDER_HINT;
+}
+
+const recorded = () => recorder.toTake(recBy.value.trim(), recRole.value.trim());
+
+recButtons[0].addEventListener('click', () => { show(recorded(), { clear: 'fast', user: true }); toHero(); });
+recButtons[1].addEventListener('click', () => {
+  const take = recorded();
+  mine.push(take);
+  putFirst([take]);
+  persist();
+  resetRecorder();
+  renderList();
+  say(`Kept “${take.text}”. It is first in the list.`);
+});
+recButtons[2].addEventListener('click', () => { resetRecorder(); recorder.field.focus(); });
+recBy.addEventListener('change', persist);
+recRole.addEventListener('change', persist);
+
+/* ---------- The list of takes ---------- */
+async function copy(text) {
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const ta = h('textarea', { class: 'visually-hidden' });
+    ta.value = text;
+    document.body.append(ta); ta.select();
+    document.execCommand('copy'); ta.remove();
+  }
+}
+
+const who = (take) => (take.sample ? 'Simulated sample' : `${take.by}${take.role ? `, ${take.role}` : ''}`);
+const named = (take) => (take.sample ? 'the sample take' : `${take.by}'s take`);
+
+function action(label, fn) {
+  const b = h('button', { class: 'tt-link', type: 'button' }, label);
+  b.addEventListener('click', fn);
+  return b;
+}
+
+/* ---------- Reordering: drag a handle, or focus it and use the arrow keys ---------- */
+const EASE = 'cubic-bezier(.2, .8, .2, 1)';
+
+/* Runs a DOM change and lets the given rows glide from where they were to where they land. */
+function slide(nodes, change) {
+  const before = nodes.map((n) => n.getBoundingClientRect().top);
+  change();
+  nodes.forEach((n, i) => {
+    n.getAnimations().forEach((a) => a.cancel());
+    const dy = before[i] - n.getBoundingClientRect().top;
+    if (dy && !reducedMotion) n.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: 180, easing: EASE });
+  });
+}
+
+function commitOrder(li) {
+  const rows = [...takeList.children];
+  order = rows.map((n) => n.dataset.id);
+  persist();
+  const i = allTakes().indexOf(current);
+  if (i >= 0) index = i;
+  say(`Moved to ${rows.indexOf(li) + 1} of ${rows.length}.`);
+}
+
+/* The element that actually scrolls the list: the right pane on desktop, the page on small screens. */
+function scrollerOf(node) {
+  for (let n = node.parentElement; n && n !== document.body; n = n.parentElement) {
+    if (/auto|scroll/.test(getComputedStyle(n).overflowY) && n.scrollHeight > n.clientHeight) return n;
+  }
+  return document.scrollingElement;
+}
+
+function grip(li, take) {
+  const b = h('button', { class: 'take__grip', type: 'button', 'aria-label': `Reorder “${take.text}”. Drag, or use the up and down arrow keys.` });
+  const icon = s('svg', { width: 12, height: 18, viewBox: '0 0 12 18', 'aria-hidden': 'true' });
+  for (const cy of [3, 9, 15]) for (const cx of [3, 9]) icon.append(s('circle', { cx, cy, r: 1.6 }));
+  b.append(icon);
+
+  // Swaps always move the neighbour, never this row. Re-inserting the row being dragged
+  // would drop its pointer capture and its focus.
+  const swap = (other) => slide([li, other], () => (other === li.previousElementSibling ? li.after(other) : li.before(other)));
+
+  b.addEventListener('keydown', (e) => {
+    const up = e.key === 'ArrowUp', down = e.key === 'ArrowDown';
+    if (!up && !down) return;
+    e.preventDefault();
+    const other = up ? li.previousElementSibling : li.nextElementSibling;
+    if (!other) return;
+    swap(other);
+    li.scrollIntoView({ block: 'nearest' });
+    commitOrder(li);
+  });
+
+  b.addEventListener('pointerdown', (e) => {
+    if (e.button) return;
+    e.preventDefault();
+    b.focus();
+    try { b.setPointerCapture(e.pointerId); } catch {}
+    const scroller = scrollerOf(takeList);
+    const startScroll = scroller.scrollTop;
+    let startY = e.clientY, lastY = e.clientY, moved = false, raf = 0;
+    li.classList.add('is-dragging');
+    document.documentElement.classList.add('is-sorting');
+
+    // How far the row should sit from its slot: pointer travel plus any scrolling since the grab.
+    const offset = () => lastY - startY + scroller.scrollTop - startScroll;
+    const update = () => {
+      // Swap with a neighbour whenever this row's centre passes the neighbour's centre.
+      // offsetTop is the laid-out position, so rows still gliding don't confuse it.
+      for (;;) {
+        const top = li.offsetTop;
+        const centre = top + li.offsetHeight / 2 + offset();
+        const prev = li.previousElementSibling, next = li.nextElementSibling;
+        const other = prev && centre < prev.offsetTop + prev.offsetHeight / 2 ? prev
+          : next && centre > next.offsetTop + next.offsetHeight / 2 ? next : null;
+        if (!other) break;
+        slide([other], () => (other === prev ? li.after(other) : li.before(other)));
+        startY += li.offsetTop - top;
+        moved = true;
+      }
+      li.style.transform = `translateY(${offset()}px)`;
+    };
+    // Near the top or bottom edge, scroll the list along.
+    const autoScroll = () => {
+      const view = scroller === document.scrollingElement ? { top: 0, bottom: innerHeight } : scroller.getBoundingClientRect();
+      const edge = 70;
+      const push = lastY < view.top + edge ? lastY - (view.top + edge) : lastY > view.bottom - edge ? lastY - (view.bottom - edge) : 0;
+      if (push) {
+        const was = scroller.scrollTop;
+        scroller.scrollTop += clamp(push, -edge, edge) * 0.3;
+        if (scroller.scrollTop !== was) update();
+      }
+      raf = requestAnimationFrame(autoScroll);
+    };
+    // Listening on the window means the drag carries on wherever the pointer goes.
+    const move = (ev) => { if (ev.pointerId === e.pointerId) { lastY = ev.clientY; update(); } };
+    const end = (ev) => {
+      if (ev.pointerId !== e.pointerId) return;
+      cancelAnimationFrame(raf);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', end);
+      window.removeEventListener('pointercancel', end);
+      const from = li.style.transform;
+      li.style.transform = '';
+      li.classList.remove('is-dragging');
+      document.documentElement.classList.remove('is-sorting');
+      if (from && !reducedMotion) li.animate([{ transform: from }, { transform: 'none' }], { duration: 160, easing: EASE });
+      if (moved) commitOrder(li);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
+    raf = requestAnimationFrame(autoScroll);
+  });
+  return b;
+}
+
+function renderList() {
+  const list = allTakes();
+  takeList.replaceChildren();
+  $('#restore').hidden = hidden.size === 0;
+  $('#download').disabled = list.length === 0;
+  if (!list.length) {
+    takeList.append(h('li', { class: 'takes__empty' }, 'No takes yet. Record one, or restore the samples.'));
+    return;
+  }
+  for (const take of list) {
+    const a = analyse(take);
+    const svg = s('svg', { class: 'strip strip--mini', 'aria-hidden': 'true' });
+    const meta = `${who(take)}. Plays in ${secs(a.ms / playback.rate)}. ${a.keys} keys, ${a.corrections} correction${a.corrections === 1 ? '' : 's'}.`;
+    const li = h('li', { class: 'take' },
+      h('p', { class: 'take__text' }, take.text),
+      h('p', { class: 'take__meta' }, meta),
+      svg,
+      h('div', { class: 'take__actions' },
+        action('Play', () => { show(allTakes().indexOf(take), { clear: 'fast', user: true }); toHero(); }),
+        action('Copy JSON', async () => { await copy(formatTake(take)); say(`Copied ${named(take)}.`); }),
+        action('Remove', () => remove(take)),
+      ),
+    );
+    li.prepend(grip(li, take));
+    li.dataset.id = take.id;
+    takeList.append(li);
+    new Strip(svg, { compact: true }).setTake(a);
+  }
+  const playing = list.indexOf(current);
+  if (playing >= 0) index = playing;
+  reserve();
+  markCurrent();
+}
+
+function remove(take) {
+  const wasCurrent = current && current.id === take.id;
+  if (take.sample && samples.includes(take)) hidden.add(take.id);
+  else mine = mine.filter((t) => t !== take);
+  persist();
+  renderList();
+  say(`Removed ${named(take)}.`);
+  if (wasCurrent) show(index, { clear: 'fast' });
+  else index = Math.max(0, allTakes().indexOf(current));
+}
+
+$('#restore').addEventListener('click', () => {
+  hidden.clear(); persist(); renderList();
+  say('Samples restored.');
+  if (!current) show(0);
+});
+
+$('#download').addEventListener('click', () => {
+  const url = URL.createObjectURL(new Blob([formatTakes(allTakes())], { type: 'application/json' }));
+  const a = h('a', { href: url, download: 'takes.json' });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  say('Downloaded takes.json.');
+});
+
+$('#importBtn').addEventListener('click', () => $('#importFile').click());
+$('#importFile').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    const incoming = (Array.isArray(data) ? data : [data]).map(validateTake);
+    const known = new Set(allTakes().map((t) => t.id));
+    const fresh = incoming.filter((t) => !known.has(t.id));
+    mine.push(...fresh);
+    putFirst(fresh);
+    persist(); renderList();
+    const skipped = incoming.length - fresh.length;
+    say(`Imported ${fresh.length} take${fresh.length === 1 ? '' : 's'}${skipped ? `, skipped ${skipped} already here` : ''}.`);
+    if (!current && fresh.length) show(0);
+  } catch (err) {
+    say(err instanceof SyntaxError ? `${file.name} is not valid JSON.` : `Could not import ${file.name}. ${err.message}`, true);
+  }
+});
+
+/* ---------- Playback settings ---------- */
+/* Brings the headline into view if it is not, so a change can be watched. */
+function watchHeadline() {
+  const r = player.heading.getBoundingClientRect();
+  if (r.top < 0 || r.bottom > innerHeight) player.heading.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' });
+}
+for (const input of document.querySelectorAll('.playback input[type="radio"]')) {
+  input.checked = Number(input.value) === playback[input.name];
+  input.addEventListener('change', () => {
+    playback[input.name] = Number(input.value);
+    player.rate = playback.rate;
+    persist();
+    renderList();
+    replayCurrent();
+    watchHeadline();
+  });
+}
+$('#benchReplay').addEventListener('click', () => { replayCurrent(); watchHeadline(); });
+
+/* ---------- Start ---------- */
+renderList();
+const fontsReady = document.fonts ? Promise.race([document.fonts.load('600 1em sofia-pro').catch(() => {}), wait(1500)]) : Promise.resolve();
+fontsReady.then(() => show(0));
+})();
+</script>
+</body>
+</html>

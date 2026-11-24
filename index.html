@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sandbox</title>
+<meta name="description" content="Experiments by Tylor Sherman.">
+<style>
+  :root {
+    --bg: #f6f5f1;
+    --fg: #1b1b19;
+    --muted: #6d6b64;
+    --rule: #dcd9d0;
+    --accent: #b4441f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413;
+      --fg: #ecebe6;
+      --muted: #9a978e;
+      --rule: #2e2d2a;
+      --accent: #f08a5d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.5 ui-sans-serif, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  main { max-width: 44rem; margin: 0 auto; padding: 4rem 1rem 6rem; }
+  h1 {
+    font: 600 0.8rem/1 ui-monospace, "SF Mono", Menlo, monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0 0 3rem;
+  }
+  h2 {
+    font: 500 0.75rem/1 ui-monospace, "SF Mono", Menlo, monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 3.5rem 0 0.5rem;
+  }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li {
+    display: grid;
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    gap: 0.25rem 1.5rem;
+    padding: 0.85rem 0;
+    border-top: 1px solid var(--rule);
+  }
+  li:last-child { border-bottom: 1px solid var(--rule); }
+  .name { font-weight: 600; }
+  a.name { color: var(--fg); text-decoration: none; }
+  a.name:hover, a.name:focus-visible { color: var(--accent); }
+  a.name::after { content: " \2192"; color: var(--muted); }
+  a.name:hover::after { color: var(--accent); }
+  .desc { color: var(--muted); }
+  code { font: 0.85em ui-monospace, "SF Mono", Menlo, monospace; }
+  @media (max-width: 34rem) {
+    li { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Sandbox</h1>
+
+  <h2>Live</h2>
+  <ul>
+    <li><a class="name" href="tree-streets/site/">Tree Streets of Vancouver</a>
+        <span class="desc">About thirty Vancouver streets are named after trees. Do they actually have the tree they're named for?</span></li>
+    <li><a class="name" href="shock-visualizer/dist/">Suspension Bench</a>
+        <span class="desc">Quarter-car sim and damper dyno for the Fox 38 GRIP2 and Float X2. Four-way damping and air pressure.</span></li>
+    <li><a class="name" href="360-video-example/">360 Video Portals</a>
+        <span class="desc">React Three Fiber 360° video scenes with portals between them.</span></li>
+    <li><a class="name" href="rapper-relationships/">Feat. &amp; Feuds</a>
+        <span class="desc">A map of the rap world's collaborations and beefs.</span></li>
+    <li><a class="name" href="cultch-impact-report/">The Cultch 2025/26 Impact Report</a>
+        <span class="desc">Interactive edition of the season report: 19 productions, 45,754 attendees.</span></li>
+    <li><a class="name" href="terrazzo/">Terrazzo</a>
+        <span class="desc">Procedurally generated terrazzo specimens.</span></li>
+    <li><a class="name" href="hero-type/">Hero Type</a>
+        <span class="desc">Typed-headline mockup for the Denim &amp; Steel homepage.</span></li>
+    <li><a class="name" href="guilded-button/">Sponsor Buttons</a>
+        <span class="desc">Two gold "Be a Sponsor" button treatments.</span></li>
+    <li><a class="name" href="mail-body-convert/">Mail Body Convert</a>
+        <span class="desc">Decode raw and Base64-encoded email bodies, with an HTML preview.</span></li>
+    <li><a class="name" href="test.html">3D Yo</a>
+        <span class="desc">Early 3D type test.</span></li>
+  </ul>
+
+  <h2>Needs a local server</h2>
+  <ul>
+    <li><span class="name">1-800-DOGS</span>
+        <span class="desc">Twilio IVR phone tree for a full-service dog agency. <code>1-800-dogs/</code></span></li>
+    <li><span class="name">AutoRefresh</span>
+        <span class="desc">Page-change monitor with a local fetch proxy. <code>autorefresh/</code></span></li>
+    <li><span class="name">Blessed Buy</span>
+        <span class="desc">A religious reskin of Best Buy, served through a local Playwright proxy. <code>blessed-buy/</code></span></li>
+  </ul>
+</main>
+</body>
+</html>

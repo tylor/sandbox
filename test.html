@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>3d yo</title>
+</head>
+<body>
+	<div class="types">
+		<div>
+			<span>T</span>
+			<span>E</span>
+			<span>S</span>
+			<span>T</span>
+		</div>
+		<div>
+			<span>T</span>
+			<span>E</span>
+			<span>S</span>
+			<span>T</span>
+		</div>
+		<div>
+			<span>T</span>
+			<span>E</span>
+			<span>S</span>
+			<span>T</span>
+		</div>
+	</div>
+	<style>
+		html, body, .types { height: 100%; }
+		body {
+			margin: 0;
+			padding: 0;
+			font-family: San Francisco, Arial, sans-serif;
+			font-weight: 900;
+			background-color: black;
+			color: white;
+		}
+		.types {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+		}
+		.types > div {
+			font-size: 10vw;
+			display: grid;
+			grid-template-columns: 1fr;
+			grid-template-rows: repeat(4, 1fr);
+			justify-items: center;
+			align-items: center;
+			perspective: 10000px;
+			transform: rotate3d(0, 1, 0, 0deg);
+			transform-style: preserve-3d;
+			transition: all 0.5s ease-in-out;
+		}
+		.types > div:hover:first-of-type {
+			transform: rotate3d(0, 1, 0, 45deg);
+		}
+		.types > div:hover:nth-of-type(2) {
+			transform: rotate3d(.5, 1, 0, 10deg) translate3d(0, 0, 0px);
+		}
+		.types > div:hover:last-of-type {
+			transform: rotate3d(0, 1, 0, -45deg);
+		}
+		.types span:nth-child(1) {
+			transform: translate3d(0, 0, 100px);
+		}
+		.types span:nth-child(2) {
+			transform: translate3d(0, 0, 200px);
+		}
+		.types span:nth-child(3) {
+			transform: translate3d(0, 0, -150px);
+		}
+		.types span:nth-child(4) {
+			transform: translate3d(0, 0, 200px);
+		}
+	</style>
+</body>
+</html>

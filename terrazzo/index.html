@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terrazzo — procedural specimen</title>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="%23F1ECE1"/><polygon points="6,8 12,5 14,11 8,13" fill="%23C97C54"/><polygon points="20,18 27,16 26,24 19,23" fill="%233E5548"/><polygon points="10,22 15,20 16,26 11,27" fill="%23D99E4A"/><polygon points="22,6 26,8 24,12" fill="%239FA9B3"/></svg>'>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #221F1A;
+    --paper: #FCFBF8;
+    --line: #221F1A;
+    --dim: #8A857B;
+    --accent: #9A4B32;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "IBM Plex Mono", monospace;
+    color: var(--ink);
+    background: #E9E4DA;
+    overflow: hidden;
+  }
+  #stage { position: fixed; inset: 0; display: block; }
+
+  /* ---------- specimen card ---------- */
+  #panel {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 300px;
+    max-height: calc(100vh - 40px);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    box-shadow: 6px 6px 0 rgba(34, 31, 26, 0.18);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #panel-scroll { overflow-y: auto; overscroll-behavior: contain; }
+  #panel-scroll::-webkit-scrollbar { width: 8px; }
+  #panel-scroll::-webkit-scrollbar-thumb { background: #D6D0C4; }
+
+  header {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--dim);
+    display: flex;
+    justify-content: space-between;
+  }
+  h1 {
+    font-family: "Fraunces", serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: 26px;
+    letter-spacing: 0.01em;
+    margin-top: 2px;
+  }
+  .batch-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .batch-row .no {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    flex: 1;
+    border: 1px solid var(--line);
+    padding: 6px 8px;
+    background: transparent;
+    font-family: inherit;
+    color: var(--ink);
+    width: 100%;
+  }
+  .batch-row .no:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  button {
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    padding: 7px 10px;
+    cursor: pointer;
+  }
+  button:hover { background: var(--ink); color: var(--paper); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button.primary { background: var(--ink); color: var(--paper); }
+  button.primary:hover { background: var(--accent); border-color: var(--accent); }
+
+  section { padding: 12px 16px; border-bottom: 1px solid #E4DFD4; }
+  section:last-of-type { border-bottom: none; }
+  .sec-title {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 10px;
+  }
+
+  /* ---------- sliders ---------- */
+  .ctl { margin-bottom: 10px; }
+  .ctl:last-child { margin-bottom: 0; }
+  .ctl-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+  .ctl-head .val { color: var(--dim); font-variant-numeric: tabular-nums; }
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 16px;
+    background: transparent;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 2px; background: var(--ink);
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 12px;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    margin-top: -5px;
+  }
+  input[type="range"]::-moz-range-track { height: 2px; background: var(--ink); }
+  input[type="range"]::-moz-range-thumb {
+    width: 10px; height: 10px;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+  }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > * { flex: 1; }
+
+  select, input[type="number"] {
+    font-family: inherit;
+    font-size: 10px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    padding: 5px 6px;
+    width: 100%;
+  }
+
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 8px;
+  }
+  .check:last-child { margin-bottom: 0; }
+  .check input { accent-color: var(--ink); width: 13px; height: 13px; cursor: pointer; }
+
+  /* ---------- palette swatches ---------- */
+  #swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+  .swatch {
+    position: relative;
+    width: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .swatch .chip {
+    width: 40px; height: 30px;
+    border: 1px solid var(--line);
+    cursor: pointer;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .swatch input[type="color"] {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .swatch .w {
+    font-size: 9px;
+    text-align: center;
+    border: 1px solid #D6D0C4;
+    padding: 2px 0;
+  }
+  .swatch .rm {
+    position: absolute;
+    top: -6px; right: -6px;
+    width: 15px; height: 15px;
+    line-height: 12px;
+    font-size: 10px;
+    padding: 0;
+    border-radius: 50%;
+    display: none;
+    z-index: 2;
+  }
+  .swatch:hover .rm { display: block; }
+  .swatch.add .chip {
+    background: transparent;
+    border-style: dashed;
+    font-size: 14px;
+    color: var(--dim);
+  }
+  .ground-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 12px;
+    font-size: 10px; letter-spacing: 0.06em;
+  }
+  .ground-row .chip {
+    width: 40px; height: 22px;
+    border: 1px solid var(--line);
+    position: relative; overflow: hidden;
+    cursor: pointer;
+  }
+  .ground-row input[type="color"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  }
+
+  footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    gap: 8px;
+    background: var(--paper);
+  }
+  footer select { flex: 0 0 76px; }
+  footer button { flex: 1; }
+
+  .hint {
+    position: fixed;
+    bottom: 14px;
+    right: 18px;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(34,31,26,0.55);
+    background: rgba(252,251,248,0.7);
+    padding: 4px 8px;
+    backdrop-filter: blur(2px);
+  }
+
+  @media (max-width: 640px) {
+    #panel { left: 10px; right: 10px; top: 10px; width: auto; max-height: 70vh; }
+    .hint { display: none; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    #stage { transition: opacity 0.25s ease; }
+    #stage.rendering { opacity: 0.92; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stage" aria-label="Generated terrazzo texture"></canvas>
+
+<aside id="panel" aria-label="Texture parameters">
+  <header>
+    <div class="eyebrow"><span>Procedural specimen</span><span>Cast in browser</span></div>
+    <h1>Terrazzo</h1>
+    <div class="batch-row">
+      <input class="no" id="seed" type="text" inputmode="numeric" aria-label="Batch seed" value="000042">
+      <button id="reroll" title="New batch (Space)">New batch</button>
+    </div>
+  </header>
+
+  <div id="panel-scroll">
+    <section>
+      <div class="sec-title">Aggregate</div>
+      <div class="ctl" data-param="chipScale" data-min="0.4" data-max="2.2" data-step="0.01" data-fmt="x">
+        <div class="ctl-head"><span>Chip size</span><span class="val"></span></div>
+        <input type="range">
+      </div>
+      <div class="ctl" data-param="density" data-min="0.05" data-max="0.55" data-step="0.01" data-fmt="%">
+        <div class="ctl-head"><span>Density</span><span class="val"></span></div>
+        <input type="range">
+      </div>
+      <div class="ctl" data-param="heroMix" data-min="0" data-max="1" data-step="0.01" data-fmt="%">
+        <div class="ctl-head"><span>Large-chip share</span><span class="val"></span></div>
+        <input type="range">
+      </div>
+      <div class="ctl" data-param="spacing" data-min="0" data-max="1" data-step="0.01" data-fmt="%">
+        <div class="ctl-head"><span>Grout spacing</span><span class="val"></span></div>
+        <input type="range">
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-title">Fracture</div>
+      <div class="ctl" data-param="angularity" data-min="0" data-max="1" data-step="0.01" data-fmt="%">
+        <div class="ctl-head"><span>Angularity</span><span class="val"></span></div>
+        <input type="range">
+      </div>
+      <div class="ctl" data-param="roundness" data-min="0" data-max="1" data-step="0.01" data-fmt="%">
+        <div class="ctl-head"><span>Worn edges</span><span class="val"></span></div>
+        <input type="range">
+      </div>
+      <div class="ctl" data-param="elongation" data-min="0" data-max="1" data-step="0.01" data-fmt="%">
+        <div class="ctl-head"><span>Elongation</span><span class="val"></span></div>
+        <input type="range">
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-title">Matrix</div>
+      <div class="ctl" data-param="speckle" data-min="0" data-max="1" data-step="0.01" data-fmt="%">
+        <div class="ctl-head"><span>Fine speckle</span><span class="val"></span></div>
+        <input type="range">
+      </div>
+      <div class="ctl" data-param="grain" data-min="0" data-max="1" data-step="0.01" data-fmt="%">
+        <div class="ctl-head"><span>Surface grain</span><span class="val"></span></div>
+        <input type="range">
+      </div>
+      <label class="check"><input type="checkbox" id="veins" checked> Marble veining in large chips</label>
+    </section>
+
+    <section>
+      <div class="sec-title">Stone mix</div>
+      <div class="ctl" style="margin-bottom:12px">
+        <select id="preset" aria-label="Palette preset"></select>
+      </div>
+      <div id="swatches"></div>
+      <div class="ground-row">
+        <span class="chip" id="ground-chip"><input type="color" id="ground" aria-label="Ground colour"></span>
+        <span>Cement ground</span>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-title">Casting</div>
+      <div class="row" style="margin-bottom:8px">
+        <select id="tileSize" aria-label="Tile resolution">
+          <option value="512">512 px tile</option>
+          <option value="1024" selected>1024 px tile</option>
+          <option value="2048">2048 px tile</option>
+        </select>
+      </div>
+      <label class="check"><input type="checkbox" id="seamless" checked> Seamless repeat</label>
+    </section>
+  </div>
+
+  <footer>
+    <select id="exportSize" aria-label="Export resolution">
+      <option value="1024">1024</option>
+      <option value="2048" selected>2048</option>
+      <option value="4096">4096</option>
+    </select>
+    <button class="primary" id="export">Export PNG</button>
+  </footer>
+</aside>
+
+<div class="hint">Space — new batch</div>
+
+<script>
+"use strict";
+
+/* ================= seeded RNG ================= */
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/* ================= colour helpers ================= */
+function hexToRgb(h) {
+  const n = parseInt(h.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function rgbToHex(r, g, b) {
+  return "#" + [r, g, b].map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("");
+}
+function mix(a, b, t) {
+  const A = hexToRgb(a), B = hexToRgb(b);
+  return rgbToHex(A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t);
+}
+function shade(hex, amt) { // amt -1..1, negative darkens
+  return amt < 0 ? mix(hex, "#000000", -amt) : mix(hex, "#ffffff", amt);
+}
+function jitterColor(hex, rng, amount) {
+  const [r, g, b] = hexToRgb(hex);
+  const d = () => (rng() - 0.5) * 2 * amount * 255;
+  return rgbToHex(r + d(), g + d(), b + d());
+}
+
+/* ================= palettes (drawn from the sample tiles) ================= */
+const PRESETS = {
+  "Crisp bianco": {
+    ground: "#F3EFE8",
+    chips: [
+      { c: "#22392E", w: 1.4 }, { c: "#9A4B32", w: 1.4 }, { c: "#B36A4C", w: 1 },
+      { c: "#E8CFC4", w: 1 }, { c: "#E4C9A2", w: 0.9 }, { c: "#EFE3D3", w: 0.8 },
+      { c: "#B9B4AD", w: 0.6 }
+    ]
+  },
+  "Tofino": {
+    ground: "#EFE9DC",
+    chips: [
+      { c: "#C97C54", w: 1.5 }, { c: "#D99E4A", w: 1.2 }, { c: "#3E5548", w: 1.2 },
+      { c: "#55676A", w: 0.9 }, { c: "#E5B598", w: 0.9 }, { c: "#EDE2CE", w: 0.7 }
+    ]
+  },
+  "Soft confetti": {
+    ground: "#E8E4DB",
+    chips: [
+      { c: "#4E7A76", w: 1.2 }, { c: "#C0913F", w: 1.2 }, { c: "#CE8F72", w: 1 },
+      { c: "#C9C2B6", w: 1 }, { c: "#D9A793", w: 0.8 }, { c: "#2E2A26", w: 0.25 }
+    ]
+  },
+  "Nougat": {
+    ground: "#DCD3C2",
+    chips: [
+      { c: "#7A4A2B", w: 1.2 }, { c: "#B98A45", w: 1 }, { c: "#9FA9B3", w: 1.1 },
+      { c: "#F2EFE8", w: 1.3 }, { c: "#47594C", w: 0.9 }, { c: "#C4C6C6", w: 0.7 }
+    ]
+  },
+  "Fine fleck": {
+    ground: "#EDEBE6",
+    chips: [
+      { c: "#D07A45", w: 1.3 }, { c: "#3D4F5C", w: 1.1 }, { c: "#C9A257", w: 1 },
+      { c: "#C05B3E", w: 0.8 }, { c: "#8FA3A8", w: 0.6 }
+    ],
+    cast: { chipScale: 0.5, density: 0.14, heroMix: 0.1, angularity: 0.7 }
+  },
+  "Gemstone white": {
+    ground: "#F4F3EF",
+    chips: [
+      { c: "#50504A", w: 1.3 }, { c: "#A79E7E", w: 1.1 }, { c: "#9E5245", w: 0.9 },
+      { c: "#A9BFA4", w: 0.9 }, { c: "#93AEBB", w: 0.8 }, { c: "#D9A8A8", w: 0.8 },
+      { c: "#E0D8BE", w: 0.9 }, { c: "#6B5138", w: 0.7 }, { c: "#C0A24B", w: 0.6 }
+    ],
+    cast: { chipScale: 0.55, density: 0.18, heroMix: 0.08, spacing: 0.35, angularity: 0.7, elongation: 0.3, speckle: 0.75 }
+  },
+  "Pistachio": {
+    ground: "#CBD5B1",
+    chips: [
+      { c: "#F3EFE4", w: 1.5 }, { c: "#3A4A38", w: 1 }, { c: "#A85C3E", w: 0.9 },
+      { c: "#7E8F6E", w: 0.9 }, { c: "#DBA795", w: 0.8 }, { c: "#C99C4F", w: 0.7 },
+      { c: "#33312B", w: 0.4 }
+    ]
+  },
+  "Nero notte": {
+    ground: "#2B2823",
+    chips: [
+      { c: "#EFE7D8", w: 1.4 }, { c: "#C97C54", w: 1.1 }, { c: "#D99E4A", w: 0.9 },
+      { c: "#8FA3A8", w: 0.8 }, { c: "#6B4A33", w: 0.7 }
+    ]
+  }
+};
+
+/* ================= state ================= */
+const state = {
+  seed: 42,
+  chipScale: 1,
+  density: 0.32,
+  heroMix: 0.55,
+  spacing: 0.25,
+  angularity: 0.65,
+  roundness: 0.15,
+  elongation: 0.35,
+  speckle: 0.55,
+  grain: 0.35,
+  veins: true,
+  seamless: true,
+  tileSize: 1024,
+  ground: PRESETS["Crisp bianco"].ground,
+  chips: PRESETS["Crisp bianco"].chips.map(x => ({ ...x }))
+};
+
+/* ================= chip geometry ================= */
+function makeChipPath(rng, r, angularity, roundness, elongation) {
+  // vertex count: sharper shards use fewer vertices
+  const n = Math.round(7 - angularity * 2.5 + rng() * 2);
+  // random angles with a guaranteed minimum gap, so shapes stay convex-ish
+  let angles = [];
+  for (let i = 0; i < n; i++) angles.push((i + 0.15 + rng() * 0.7) * (Math.PI * 2 / n));
+  const stretch = 1 + elongation * (0.3 + rng() * 1.1);
+  const theta = rng() * Math.PI * 2;
+  const cosT = Math.cos(theta), sinT = Math.sin(theta);
+  const pts = angles.map(a => {
+    const rad = r * (1 - angularity * 0.55 * rng());
+    let x = Math.cos(a) * rad * stretch;
+    let y = Math.sin(a) * rad / Math.sqrt(stretch);
+    return [x * cosT - y * sinT, x * sinT + y * cosT];
+  });
+  return { pts, roundness };
+}
+
+function traceChip(ctx, cx, cy, chip) {
+  const { pts, roundness } = chip;
+  const n = pts.length;
+  if (roundness < 0.02) {
+    ctx.moveTo(cx + pts[0][0], cy + pts[0][1]);
+    for (let i = 1; i < n; i++) ctx.lineTo(cx + pts[i][0], cy + pts[i][1]);
+    ctx.closePath();
+    return;
+  }
+  // rounded polygon: cut each corner with a quadratic curve
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i + n - 1) % n], p1 = pts[i], p2 = pts[(i + 1) % n];
+    const v1 = [p1[0] - p0[0], p1[1] - p0[1]];
+    const v2 = [p2[0] - p1[0], p2[1] - p1[1]];
+    const l1 = Math.hypot(v1[0], v1[1]), l2 = Math.hypot(v2[0], v2[1]);
+    const cut = Math.min(l1, l2) * 0.5 * roundness;
+    const a = [p1[0] - v1[0] / l1 * cut, p1[1] - v1[1] / l1 * cut];
+    const b = [p1[0] + v2[0] / l2 * cut, p1[1] + v2[1] / l2 * cut];
+    if (i === 0) ctx.moveTo(cx + a[0], cy + a[1]);
+    else ctx.lineTo(cx + a[0], cy + a[1]);
+    ctx.quadraticCurveTo(cx + p1[0], cy + p1[1], cx + b[0], cy + b[1]);
+  }
+  ctx.closePath();
+}
+
+/* ================= placement ================= */
+function placeChips(rng, p) {
+  // all coordinates in [0,1) tile space
+  const placed = [];
+  const cell = 0.09 * p.chipScale;
+  const grid = new Map();
+  const key = (x, y) => Math.floor(x / cell) + "," + Math.floor(y / cell);
+  const gap = 0.0015 + p.spacing * 0.010;
+  const wrap = p.seamless;
+
+  function dist2(x1, y1, x2, y2) {
+    let dx = Math.abs(x1 - x2), dy = Math.abs(y1 - y2);
+    if (wrap) { dx = Math.min(dx, 1 - dx); dy = Math.min(dy, 1 - dy); }
+    return dx * dx + dy * dy;
+  }
+  function fits(x, y, r) {
+    const reach = Math.ceil((r + 0.09 * p.chipScale) / cell);
+    const cx = Math.floor(x / cell), cy = Math.floor(y / cell);
+    for (let gx = cx - reach; gx <= cx + reach; gx++) {
+      for (let gy = cy - reach; gy <= cy + reach; gy++) {
+        let kx = gx, ky = gy;
+        if (wrap) {
+          const cells = Math.ceil(1 / cell);
+          kx = ((gx % cells) + cells) % cells;
+          ky = ((gy % cells) + cells) % cells;
+        }
+        const bucket = grid.get(kx + "," + ky);
+        if (!bucket) continue;
+        for (const o of bucket) {
+          const min = o.r + r + gap;
+          if (dist2(x, y, o.x, o.y) < min * min) return false;
+        }
+      }
+    }
+    return true;
+  }
+  function insert(x, y, r, extra) {
+    const o = { x, y, r, ...extra };
+    placed.push(o);
+    const k = key(x, y);
+    if (!grid.has(k)) grid.set(k, []);
+    grid.get(k).push(o);
+    return o;
+  }
+
+  const totalWeight = p.chips.reduce((s, c) => s + c.w, 0) || 1;
+  function pickColor() {
+    let t = rng() * totalWeight;
+    for (const c of p.chips) { t -= c.w; if (t <= 0) return c.c; }
+    return p.chips[p.chips.length - 1].c;
+  }
+
+  function fill(targetArea, sizeFn) {
+    let area = 0, misses = 0;
+    while (area < targetArea && misses < 2500) {
+      const r = sizeFn();
+      const x = rng(), y = rng();
+      if (fits(x, y, r)) {
+        insert(x, y, r, { color: pickColor(), seed: rng() * 1e9 });
+        area += Math.PI * r * r;
+        misses = 0;
+      } else misses++;
+    }
+  }
+
+  const s = p.chipScale;
+  // large "hero" chips first for better packing
+  fill(p.density * p.heroMix, () => (0.030 + 0.048 * Math.pow(rng(), 1.8)) * s);
+  // small aggregate
+  fill(p.density * (1 - p.heroMix), () => (0.005 + 0.022 * Math.pow(rng(), 2.2)) * s);
+
+  return placed;
+}
+
+/* ================= tile renderer ================= */
+function renderTile(canvas, px, p) {
+  canvas.width = px;
+  canvas.height = px;
+  const ctx = canvas.getContext("2d");
+  const rng = mulberry32(p.seed);
+
+  /* ground */
+  ctx.fillStyle = p.ground;
+  ctx.fillRect(0, 0, px, px);
+
+  /* soft cement mottle */
+  const mottleRng = mulberry32(p.seed ^ 0x9E3779B9);
+  for (let i = 0; i < 26; i++) {
+    const x = mottleRng() * px, y = mottleRng() * px, r = (0.1 + mottleRng() * 0.25) * px;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    const tone = mottleRng() > 0.5 ? shade(p.ground, 0.05) : shade(p.ground, -0.045);
+    g.addColorStop(0, tone + "14");
+    g.addColorStop(1, tone + "00");
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+
+  /* fine speckle in the matrix */
+  const spkRng = mulberry32(p.seed ^ 0x51E15E);
+  const darkGround = hexToRgb(p.ground).reduce((a, b) => a + b, 0) < 360;
+  const spkCount = Math.round(p.speckle * 9000);
+  for (let i = 0; i < spkCount; i++) {
+    const x = spkRng() * px, y = spkRng() * px;
+    const r = (0.0005 + Math.pow(spkRng(), 2.4) * 0.0024) * px;
+    const roll = spkRng();
+    let col;
+    if (roll < 0.55) {
+      col = darkGround ? shade(p.ground, 0.10 + spkRng() * 0.16) : shade(p.ground, -(0.06 + spkRng() * 0.13));
+    } else if (roll < 0.8) {
+      col = darkGround ? shade(p.ground, -0.12) : "#FFFFFF";
+    } else {
+      const base = p.chips[Math.floor(spkRng() * p.chips.length)].c;
+      col = mix(base, p.ground, 0.35);
+    }
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    const n = 3 + Math.floor(spkRng() * 3);
+    const a0 = spkRng() * Math.PI * 2;
+    for (let v = 0; v < n; v++) {
+      const a = a0 + v / n * Math.PI * 2;
+      const rr = r * (0.6 + spkRng() * 0.5);
+      const vx = x + Math.cos(a) * rr, vy = y + Math.sin(a) * rr;
+      v === 0 ? ctx.moveTo(vx, vy) : ctx.lineTo(vx, vy);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  /* aggregate chips */
+  const chips = placeChips(rng, p);
+  for (const chip of chips) {
+    const cRng = mulberry32(chip.seed | 0);
+    const shapeR = chip.r * px;
+    const shape = makeChipPath(cRng, shapeR, p.angularity, p.roundness, p.elongation);
+    const color = jitterColor(chip.color, cRng, 0.03);
+
+    const offsets = [[0, 0]];
+    if (p.seamless) {
+      const m = chip.r * 2.2;
+      const xs = [0]; const ys = [0];
+      if (chip.x < m) xs.push(1); if (chip.x > 1 - m) xs.push(-1);
+      if (chip.y < m) ys.push(1); if (chip.y > 1 - m) ys.push(-1);
+      offsets.length = 0;
+      for (const ox of xs) for (const oy of ys) offsets.push([ox, oy]);
+    }
+
+    for (const [ox, oy] of offsets) {
+      const cx = (chip.x + ox) * px, cy = (chip.y + oy) * px;
+      if (cx < -shapeR * 2 || cx > px + shapeR * 2 || cy < -shapeR * 2 || cy > px + shapeR * 2) continue;
+
+      ctx.save();
+      ctx.beginPath();
+      traceChip(ctx, cx, cy, shape);
+      ctx.clip();
+
+      // base fill with a faint directional gradient — stone is never flat
+      const gA = cRng() * Math.PI * 2;
+      const gd = ctx.createLinearGradient(
+        cx - Math.cos(gA) * shapeR, cy - Math.sin(gA) * shapeR,
+        cx + Math.cos(gA) * shapeR, cy + Math.sin(gA) * shapeR
+      );
+      gd.addColorStop(0, shade(color, 0.06));
+      gd.addColorStop(1, shade(color, -0.07));
+      ctx.fillStyle = gd;
+      ctx.fillRect(cx - shapeR * 2, cy - shapeR * 2, shapeR * 4, shapeR * 4);
+
+      // marble veining on larger chips
+      if (p.veins && chip.r > 0.02) {
+        const veinCount = 1 + Math.floor(cRng() * 3);
+        for (let v = 0; v < veinCount; v++) {
+          const light = cRng() > 0.5;
+          ctx.strokeStyle = shade(color, light ? 0.35 : -0.35) + "38";
+          ctx.lineWidth = Math.max(0.6, shapeR * 0.035 * (0.5 + cRng()));
+          ctx.beginPath();
+          const a = cRng() * Math.PI * 2;
+          let vx = cx + Math.cos(a) * shapeR * 0.9;
+          let vy = cy + Math.sin(a) * shapeR * 0.9;
+          ctx.moveTo(vx, vy);
+          const steps = 4 + Math.floor(cRng() * 3);
+          for (let sIdx = 0; sIdx < steps; sIdx++) {
+            vx += (cRng() - 0.5) * shapeR * 0.9 - Math.cos(a) * shapeR * 0.35;
+            vy += (cRng() - 0.5) * shapeR * 0.9 - Math.sin(a) * shapeR * 0.35;
+            ctx.lineTo(vx, vy);
+          }
+          ctx.stroke();
+        }
+        // faint internal speckle in big chips
+        const inner = Math.floor(shapeR * 0.35);
+        for (let sp = 0; sp < inner; sp++) {
+          ctx.fillStyle = shade(color, (cRng() - 0.5) * 0.4) + "30";
+          const sa = cRng() * Math.PI * 2, sr = cRng() * shapeR * 0.85;
+          ctx.fillRect(cx + Math.cos(sa) * sr, cy + Math.sin(sa) * sr, shapeR * 0.05, shapeR * 0.05);
+        }
+      }
+
+      ctx.restore();
+
+      // crisp edge line, like polished stone meeting cement
+      ctx.beginPath();
+      traceChip(ctx, cx, cy, shape);
+      ctx.strokeStyle = shade(color, -0.25) + "40";
+      ctx.lineWidth = Math.max(0.5, px * 0.0006);
+      ctx.stroke();
+    }
+  }
+
+  /* surface grain */
+  if (p.grain > 0.01) {
+    const gSize = 128;
+    const gc = document.createElement("canvas");
+    gc.width = gSize; gc.height = gSize;
+    const gctx = gc.getContext("2d");
+    const img = gctx.createImageData(gSize, gSize);
+    const gRng = mulberry32(p.seed ^ 0xABCDEF);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const v = 110 + gRng() * 60;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+      img.data[i + 3] = 255;
+    }
+    gctx.putImageData(img, 0, 0);
+    ctx.save();
+    ctx.globalAlpha = p.grain * 0.16;
+    ctx.globalCompositeOperation = "overlay";
+    ctx.imageSmoothingEnabled = false;
+    const pat = ctx.createPattern(gc, "repeat");
+    ctx.fillStyle = pat;
+    ctx.fillRect(0, 0, px, px);
+    ctx.restore();
+  }
+}
+
+/* ================= display ================= */
+const stage = document.getElementById("stage");
+const tileCanvas = document.createElement("canvas");
+let renderQueued = false;
+
+function draw() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  stage.width = Math.round(innerWidth * dpr);
+  stage.height = Math.round(innerHeight * dpr);
+  const ctx = stage.getContext("2d");
+
+  renderTile(tileCanvas, state.tileSize, state);
+
+  if (state.seamless) {
+    const pat = ctx.createPattern(tileCanvas, "repeat");
+    ctx.fillStyle = pat;
+    ctx.fillRect(0, 0, stage.width, stage.height);
+  } else {
+    // single swatch, centred like a sample board
+    ctx.fillStyle = "#DAD4C8";
+    ctx.fillRect(0, 0, stage.width, stage.height);
+    const size = Math.min(stage.width, stage.height) * 0.78;
+    const x = (stage.width - size) / 2, y = (stage.height - size) / 2;
+    ctx.save();
+    ctx.shadowColor = "rgba(34,31,26,0.35)";
+    ctx.shadowBlur = size * 0.04;
+    ctx.shadowOffsetY = size * 0.015;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(x, y, size, size);
+    ctx.restore();
+    ctx.drawImage(tileCanvas, x, y, size, size);
+  }
+  stage.classList.remove("rendering");
+}
+
+function requestDraw() {
+  if (renderQueued) return;
+  renderQueued = true;
+  stage.classList.add("rendering");
+  requestAnimationFrame(() => {
+    renderQueued = false;
+    draw();
+  });
+}
+
+/* ================= UI wiring ================= */
+function fmt(v, kind) {
+  if (kind === "%") return Math.round(v * 100) + "%";
+  if (kind === "x") return v.toFixed(2) + "×";
+  return v;
+}
+
+const sliderCtls = [];
+document.querySelectorAll(".ctl[data-param]").forEach(ctl => {
+  const name = ctl.dataset.param;
+  const input = ctl.querySelector("input[type=range]");
+  const val = ctl.querySelector(".val");
+  input.min = ctl.dataset.min;
+  input.max = ctl.dataset.max;
+  input.step = ctl.dataset.step;
+  input.value = state[name];
+  val.textContent = fmt(state[name], ctl.dataset.fmt);
+  input.addEventListener("input", () => {
+    state[name] = parseFloat(input.value);
+    val.textContent = fmt(state[name], ctl.dataset.fmt);
+    requestDraw();
+  });
+  sliderCtls.push({ name, input, val, fmtKind: ctl.dataset.fmt });
+});
+function syncControls() {
+  for (const c of sliderCtls) {
+    c.input.value = state[c.name];
+    c.val.textContent = fmt(state[c.name], c.fmtKind);
+  }
+}
+
+const seedInput = document.getElementById("seed");
+function setSeed(n) {
+  state.seed = n >>> 0;
+  seedInput.value = String(state.seed).padStart(6, "0");
+  requestDraw();
+}
+seedInput.addEventListener("change", () => {
+  const n = parseInt(seedInput.value.replace(/\D/g, ""), 10);
+  setSeed(Number.isFinite(n) ? n : Math.floor(Math.random() * 1e6));
+});
+document.getElementById("reroll").addEventListener("click", () => setSeed(Math.floor(Math.random() * 1e6)));
+window.addEventListener("keydown", e => {
+  if (e.code === "Space" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "SELECT") {
+    e.preventDefault();
+    setSeed(Math.floor(Math.random() * 1e6));
+  }
+});
+
+document.getElementById("veins").addEventListener("change", e => { state.veins = e.target.checked; requestDraw(); });
+document.getElementById("seamless").addEventListener("change", e => { state.seamless = e.target.checked; requestDraw(); });
+document.getElementById("tileSize").addEventListener("change", e => { state.tileSize = parseInt(e.target.value, 10); requestDraw(); });
+
+/* palette UI */
+const presetSel = document.getElementById("preset");
+Object.keys(PRESETS).forEach(name => {
+  const o = document.createElement("option");
+  o.value = name; o.textContent = name;
+  presetSel.appendChild(o);
+});
+function applyPreset(name) {
+  const p = PRESETS[name];
+  if (!p) return;
+  presetSel.value = name;
+  state.ground = p.ground;
+  state.chips = p.chips.map(x => ({ ...x }));
+  if (p.cast) {
+    Object.assign(state, p.cast);
+    syncControls();
+  }
+  syncPalette();
+  requestDraw();
+}
+presetSel.addEventListener("change", () => applyPreset(presetSel.value));
+
+const swatchesEl = document.getElementById("swatches");
+const groundInput = document.getElementById("ground");
+const groundChip = document.getElementById("ground-chip");
+
+function syncPalette() {
+  swatchesEl.innerHTML = "";
+  state.chips.forEach((chip, i) => {
+    const el = document.createElement("div");
+    el.className = "swatch";
+    el.innerHTML = `
+      <button class="rm" title="Remove colour" aria-label="Remove colour">×</button>
+      <span class="chip" style="background:${chip.c}"><input type="color" value="${chip.c}" aria-label="Chip colour ${i + 1}"></span>
+      <input class="w" type="number" min="0" max="5" step="0.1" value="${chip.w}" title="Weight" aria-label="Colour weight">
+    `;
+    el.querySelector("input[type=color]").addEventListener("input", e => {
+      chip.c = e.target.value;
+      el.querySelector(".chip").style.background = chip.c;
+      requestDraw();
+    });
+    el.querySelector(".w").addEventListener("input", e => {
+      chip.w = Math.max(0, parseFloat(e.target.value) || 0);
+      requestDraw();
+    });
+    el.querySelector(".rm").addEventListener("click", () => {
+      if (state.chips.length <= 1) return;
+      state.chips.splice(i, 1);
+      syncPalette();
+      requestDraw();
+    });
+    swatchesEl.appendChild(el);
+  });
+
+  const add = document.createElement("div");
+  add.className = "swatch add";
+  add.innerHTML = `<button class="chip" title="Add colour" aria-label="Add colour">+</button>`;
+  add.querySelector("button").addEventListener("click", () => {
+    const donor = state.chips[Math.floor(Math.random() * state.chips.length)];
+    state.chips.push({ c: jitterColor(donor.c, Math.random, 0.15), w: 1 });
+    syncPalette();
+    requestDraw();
+  });
+  swatchesEl.appendChild(add);
+
+  groundInput.value = state.ground;
+  groundChip.style.background = state.ground;
+}
+groundInput.addEventListener("input", e => {
+  state.ground = e.target.value;
+  groundChip.style.background = state.ground;
+  requestDraw();
+});
+
+/* export */
+document.getElementById("export").addEventListener("click", () => {
+  const px = parseInt(document.getElementById("exportSize").value, 10);
+  const out = document.createElement("canvas");
+  renderTile(out, px, state);
+  out.toBlob(blob => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `terrazzo-batch-${String(state.seed).padStart(6, "0")}-${px}px.png`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  }, "image/png");
+});
+
+/* resize: redraw pattern only (tile unchanged) */
+window.addEventListener("resize", requestDraw);
+
+/* ================= URL params (used by the wallpaper script) =================
+   ?ui=0            hide the panel and hint
+   ?preset=<name>   apply a preset by name, or "random"
+   ?seed=<n>        set the batch seed, or "random"
+   ?tile=<px>       tile resolution (512 / 1024 / 2048)                        */
+(function applyQuery() {
+  const q = new URLSearchParams(location.search);
+  if (q.get("ui") === "0") {
+    document.getElementById("panel").style.display = "none";
+    document.querySelector(".hint").style.display = "none";
+  }
+  const tile = parseInt(q.get("tile"), 10);
+  if ([512, 1024, 2048].includes(tile)) {
+    state.tileSize = tile;
+    document.getElementById("tileSize").value = String(tile);
+  }
+  let preset = q.get("preset");
+  if (preset === "random") {
+    const names = Object.keys(PRESETS);
+    preset = names[Math.floor(Math.random() * names.length)];
+  }
+  if (preset && PRESETS[preset]) {
+    presetSel.value = preset;
+    const p = PRESETS[preset];
+    state.ground = p.ground;
+    state.chips = p.chips.map(x => ({ ...x }));
+    if (p.cast) Object.assign(state, p.cast);
+    syncControls();
+  }
+  const seedParam = q.get("seed");
+  if (seedParam === "random") {
+    state.seed = Math.floor(Math.random() * 1e6);
+  } else if (seedParam !== null && /^\d+$/.test(seedParam)) {
+    state.seed = parseInt(seedParam, 10) >>> 0;
+  }
+  seedInput.value = String(state.seed).padStart(6, "0");
+})();
+
+syncPalette();
+requestDraw();
+</script>
+</body>
+</html>
